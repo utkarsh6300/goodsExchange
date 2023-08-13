@@ -41,18 +41,18 @@ router.post(
       // use an SMS service to send the code to the user's phone here
 
       await client.messages.create({
-        body: `Your verification code is: ${verificationCode}`,
+        body: `Your verification code for Goods-Exchange is: ${verificationCode}`,
         from: twilioPhoneNumber,
         to: `+91${phone}` // Assuming the 'phone' field is the user's phone number
       });
 
-      console.log(verificationCode);  
+      // console.log(verificationCode);  
       // Store the verification code and its expiration in the user's document
       user.verificationCode = verificationCode;
       user.verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // Code expires in 15 minutes
       await user.save();
 
-      res.json({ msg: 'Verification code sent successfully' });
+      res.status(200).json({ msg: 'Verification code sent successfully' });
     } catch (err) {
       console.error(err);
       console.error(err.message);
