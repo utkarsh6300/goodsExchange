@@ -26,6 +26,7 @@ app.use('/api/login',require('./routes/api/login'));
 app.use('/api/verify_token',require('./middlewares/verify_token'));
 app.use('/api/verify',require('./routes/api/verify'));
 app.use('/api/product',require('./routes/api/product'));
+app.use('/api/user',require('./routes/api/user'));
 
 
 

@@ -23,9 +23,10 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
-  imageUrl: {
-    type: String,
-  },
+  // array of images urls
+  imagesUrls: [{
+    type: String,}
+   ],
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // Reference to the User model

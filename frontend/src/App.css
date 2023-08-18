@@ -5,3 +5,49 @@
 #root{
     width: 100%;
 }
+/* 
+  .slideshow-container {
+    position: relative;
+    max-width: 50%;
+    
+    margin: auto;
+  }
+  
+  .slide {
+    display: none;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .slide img {
+    width: 100%;
+    height: auto;
+    max-height: 20vh; 
+  }
+  
+  .active {
+    display: block;
+  }
+  
+  .prev,
+  .next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 10px;
+    border: none;
+    background-color: transparent;
+    color: #000;
+  }
+  
+  .prev {
+    left: 0;
+  }
+  
+  .next {
+    right: 0;
+  }
+   */
+  

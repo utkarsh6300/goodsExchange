@@ -12,6 +12,7 @@ function AddProduct() {
     quantity: '',
     images: [],
   });
+   const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting" ];
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -46,8 +47,14 @@ function AddProduct() {
       formData.append('images', image);
     });
 
+    const config = {
+      headers: {
+        'token': localStorage.getItem('token'),
+        // ...formData.getHeaders(), // Include other headers from FormData
+      },
+    };
     // Send product data to the API
-    axios.post('http://localhost:5000/api/product/save', formData)
+    axios.post('http://localhost:5000/api/product/save', formData,config)
       .then(response => {
         console.log('Product added successfully:', response.data);
         // Reset form fields after successful submission
@@ -74,7 +81,7 @@ function AddProduct() {
       <form onSubmit={handleSubmit}>
 
         <TextField
-          label="Name"
+          label="Name of product"
           variant="outlined"
           fullWidth
           name="name"
@@ -94,7 +101,7 @@ function AddProduct() {
           margin="normal"
         />
         <FormControl fullWidth margin="normal">
-          <InputLabel>Category</InputLabel>
+          <InputLabel>Category*</InputLabel>
           <Select
             name="category"
             value={productData.category}
@@ -103,7 +110,12 @@ function AddProduct() {
           >
             <MenuItem value="Electronics">Electronics</MenuItem>
             <MenuItem value="Clothing">Clothing</MenuItem>
-            {/* Add more categories */}
+            {/* Add more categories */
+            categories.map((category) => (
+              <MenuItem key={category} value={category}>{category}</MenuItem>
+            ))
+            
+            }
           </Select>
         </FormControl>
         <TextField
