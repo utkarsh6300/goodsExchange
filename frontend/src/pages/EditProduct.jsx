@@ -109,6 +109,8 @@ const handleSubmit = (event) => {
           label="Description"
           variant="outlined"
           fullWidth
+          multiline   
+          rows={12}
           name="description"
           value={productData.description}
           onChange={handleChange}

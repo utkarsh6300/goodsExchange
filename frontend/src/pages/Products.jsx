@@ -9,7 +9,7 @@ function ProductsPage() {
   const [filterCategory, setFilterCategory] = useState('');
   const [sortOption, setSortOption] = useState('time'); // Default sorting by time
 
-  const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting" ];
+  const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
   const navigate = useNavigate(); 
 
@@ -62,12 +62,14 @@ function ProductsPage() {
         All Products
       </Typography>
       <div style={{ marginBottom: '16px' }}>
-        <Select value={filterCategory} onChange={handleFilterCategoryChange}>
+        <Typography variant="subtitle1" gutterBottom> Filter by Category </Typography>
+        <Select value={filterCategory}  onChange={handleFilterCategoryChange}>
           <MenuItem value="">All Categories</MenuItem>
           {categories.map(category => (
             <MenuItem key={category} value={category}>{category}</MenuItem>
           ))}
         </Select>
+         
         <Select value={sortOption} onChange={handleSortOptionChange}>
           <MenuItem value="time">Sort by Time</MenuItem>
           <MenuItem value="price">Sort by Price</MenuItem>
@@ -75,7 +77,7 @@ function ProductsPage() {
       </div>
       <Grid container spacing={2}>   
         {sortedProducts.map(product => (
-          <Grid item xs={4} key={product._id} onClick={() => navigate(`/product/${product._id}`) } >
+          <Grid item xs={12} sm={6} key={product._id} onClick={() => navigate(`/product/${product._id}`) } >
             <Card  >  
               <CardContent >
                 <Typography variant="subtitle1">Product Name {product.name}</Typography>

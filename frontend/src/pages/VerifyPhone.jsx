@@ -22,12 +22,19 @@ function PhoneNumberVerification() {
         setSendingOtp(false);
         setSentOtp(true);
         // OTP sent successfully, keep OTP input field visible
+        dispatch({ type: 'SET_SUCCESS', payload: 'OTP Sent successful' });
+        
       } else {
         // Handle OTP send failure
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to send OTP.' });
+
         console.log('Failed to send OTP.');
         setSendingOtp(false);
       }
     } catch (error) {
+      // customised error message
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to send OTP.' });
+
       console.error('An error occurred:', error);
       setSendingOtp(false);
     }
@@ -44,13 +51,18 @@ function PhoneNumberVerification() {
 
       if (response.status==200) {
         // Phone number verified successfully, proceed to next step
+        dispatch({ type: 'SET_SUCCESS', payload: 'Phone number verified successfully.' });
+
         navigate('/Login');
         console.log('Phone number verified successfully.');
       } else {
         // Handle OTP verification failure
+        dispatch({ type: 'SET_ERROR', payload: 'OTP verification failed.' });
         console.log('OTP verification failed.');
       }
     } catch (error) {
+      // customised error message
+      dispatch({ type: 'SET_ERROR', payload: 'OTP verification failed.' });
       console.error('An error occurred:', error);
     } finally {
       setVerificationInProgress(false);

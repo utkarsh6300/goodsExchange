@@ -10,7 +10,7 @@ function ManageProducts() {
   const [filterCategory, setFilterCategory] = useState('');
   const [sortOption, setSortOption] = useState('time'); // Default sorting by time
 
-  const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting" ];
+  const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
   const navigate = useNavigate(); 
 
@@ -76,7 +76,7 @@ function ManageProducts() {
       </div>
       <Grid container spacing={2}>   
         {sortedProducts.map(product => (
-          <Grid item xs={4} key={product._id} onClick={() => navigate(`/manage-product/${product._id}`) } >
+          <Grid item xs={12} sm={6} key={product._id} onClick={() => navigate(`/manage-product/${product._id}`) } >
             <Card  >  
               <CardContent >
                 <Typography variant="subtitle1">Product Name {product.name}</Typography>

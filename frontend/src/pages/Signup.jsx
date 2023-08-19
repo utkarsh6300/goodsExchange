@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography } from '@mui/material';
 import axios from 'axios';
 
+import { useAuth } from '../contexts/AuthContext';
+
 function Signup() {
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
@@ -11,22 +13,29 @@ function Signup() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+  const { state,dispatch} = useAuth();
+
+
   const handleSignup = async () => {
     try {
       const response = await axios.post('http://localhost:5000/signup', {
         username,
         name,
         phone,
-        email,
+        email, 
         password,
       });
       if (response.status==200) {
-        navigate('/login'); // Redirect to login page after successful signup
+        dispatch({ type: 'SET_SUCCESS', payload: 'SignUp successful now verify phone' });
+        navigate('/VerifyPhone'); // Redirect to login page after successful signup
       } else {
         // Handle signup failure
+        dispatch({ type: 'SET_ERROR', payload: 'SigUp failed' });
         console.log('Signup failed.');
       }
     } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
+      // dispatch customised error message
       console.error('An error occurred:', error);
     }
   };

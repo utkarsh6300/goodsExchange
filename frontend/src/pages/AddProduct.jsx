@@ -93,8 +93,10 @@ function AddProduct() {
         <TextField
           label="Description"
           variant="outlined"
-          fullWidth
           name="description"
+          fullWidth
+          multiline   
+          rows={12}
           value={productData.description}
           onChange={handleChange}
           required

@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography } from '@mui/material';
 import axios from 'axios'; 
 
-function Login({ setIsLoggedIn }) {
+import { useAuth } from '../contexts/AuthContext';
+
+function Login() {
+  const { dispatch} = useAuth();
+
   const [phone, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate(); 
@@ -19,10 +23,12 @@ function Login({ setIsLoggedIn }) {
         
         //set token in local storage
         localStorage.setItem('token', response.data.token);
-        setIsLoggedIn(true);
+        dispatch({ type: 'LOGIN' });
+        dispatch({ type: 'SET_SUCCESS', payload: 'Login successful' });
         navigate('/');
       } else {
         // Handle login failure
+        dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
         console.log('Login failed.');
       }
     } catch (error) {
@@ -30,6 +36,8 @@ function Login({ setIsLoggedIn }) {
         navigate('/VerifyPhone');
         return;
       }
+      dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
+      // dispatch customised error message
       console.error('An error occurred:', error);
     }
   };

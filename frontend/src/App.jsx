@@ -14,8 +14,10 @@ import AddProduct from './pages/AddProduct';
 import ProductDetails from './pages/ProductDetails';
 import EditProduct from './pages/EditProduct';
 
+import { useAuth } from './contexts/AuthContext';
+
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const { state } = useAuth();
 
   return (
     <div className="App">
@@ -25,24 +27,24 @@ function App() {
         <Route path="/" element={<Products />} />
         <Route
           path="/manage-products"
-          element={isLoggedIn ? <ManageProducts /> : <Navigate to="/login" />}
+          element={state.loggedIn ? <ManageProducts /> : <Navigate to="/login" />}
         />
         <Route
           path="/products"
-          element={isLoggedIn ? <Products /> : <Navigate to="/login" />}
+          element={state.loggedIn ? <Products /> : <Navigate to="/login" />}
         />
         <Route
           path="/add-product"
-          element={isLoggedIn ? <AddProduct /> : <Navigate to="/login" />}
+          element={state.loggedIn ? <AddProduct /> : <Navigate to="/login" />}
         />
         <Route path="/signup" element={<Signup />} />
         <Route
           path="/login"
-          element={isLoggedIn ? <Navigate to="/" /> : <Login setIsLoggedIn={setIsLoggedIn} />}
+          element={state.loggedIn ? <Navigate to="/" /> : <Login />}
         />
         <Route
           path="/VerifyPhone"
-          element={isLoggedIn ? <Navigate to="/" /> : <VerifyPhone />}
+          element={state.loggedIn ? <Navigate to="/" /> : <VerifyPhone />}
         />
          <Route path="/product/:productId" element={<ProductDetails />} />
          <Route path="/manage-product/:productId" element={<EditProduct />} />
