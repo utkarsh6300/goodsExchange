@@ -1,7 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
-
-import { Grid, Container, Typography, Paper,Button, Card, CardContent, CardMedia, ImageList, ImageListItem, Select, MenuItem } from '@mui/material';
+import {
+  Container, Typography, Grid, Card, CardContent, ImageList, ImageListItem, Select, MenuItem, TextField, InputAdornment
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -10,13 +13,14 @@ function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [filterCategory, setFilterCategory] = useState('');
   const [sortOption, setSortOption] = useState('time'); // Default sorting by time
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
+ const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
+
 
   const navigate = useNavigate(); 
+  const { state, dispatch } = useAuth();
 
-  const { state,dispatch } = useAuth();
- 
  
   useEffect(() => {
     // Fetch products from your API
@@ -43,17 +47,26 @@ function ProductsPage() {
 
   const handleFilterCategoryChange = (event) => {
     setFilterCategory(event.target.value);
+    setSearchTerm('');
   };
 
   const handleSortOptionChange = (event) => {
     setSortOption(event.target.value);
   };
 
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
   const filteredProducts = products.filter(product => {
-    if (filterCategory === '') {
+    if (filterCategory === '' && searchTerm === '') {
       return true;
     }
-    return product.category === filterCategory;
+
+    const categoryMatch = product.category === filterCategory || filterCategory === '';
+    const searchTermMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return categoryMatch && searchTermMatch;
   });
 
   const sortedProducts = filteredProducts.slice().sort((a, b) => {
@@ -70,29 +83,40 @@ function ProductsPage() {
       <Typography variant="h4" gutterBottom>
         All Products
       </Typography>
-      <div style={{ marginBottom: '16px' }}>
-        <Typography variant="subtitle1" gutterBottom> Filter by Category </Typography>
-        <Select value={filterCategory}  onChange={handleFilterCategoryChange}>
+      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Select value={filterCategory} onChange={handleFilterCategoryChange}>
           <MenuItem value="">All Categories</MenuItem>
           {categories.map(category => (
             <MenuItem key={category} value={category}>{category}</MenuItem>
           ))}
         </Select>
-         
         <Select value={sortOption} onChange={handleSortOptionChange}>
           <MenuItem value="time">Sort by Time</MenuItem>
           <MenuItem value="price">Sort by Price</MenuItem>
         </Select>
+        <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Search products"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       </div>
-      <Grid container spacing={2}>   
+      <Grid container spacing={2}>
         {sortedProducts.map(product => (
-          <Grid item xs={12} sm={6} key={product._id} onClick={() => navigate(`/product/${product._id}`) } >
-            <Card  >  
-              <CardContent >
+          <Grid item xs={12} sm={6} key={product._id} onClick={() => navigate(`/product/${product._id}`)}>
+            <Card>
+              <CardContent>
                 <Typography variant="subtitle1">Product Name {product.name}</Typography>
                 <Typography variant="body1">RS. {product.price} only</Typography>
                 <Typography variant="body2">Quantity: {product.quantity}</Typography>
-                
               </CardContent>
               <ImageList cols={2} rowHeight={160} style={{ padding: '16px' }}>
                 {product.imagesUrls.map((imageUrl, index) => (
@@ -110,4 +134,3 @@ function ProductsPage() {
 }
 
 export default ProductsPage;
-
