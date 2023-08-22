@@ -31,8 +31,8 @@ router.post(
   [
     check('name', 'Product name is required').not().isEmpty(),
     check('category', 'Product category is required').not().isEmpty(),
-    check('price', 'Product price is required').not().isEmpty(),
-    check('quantity', 'Quantity must be greater than or equal to zero').isInt({ min: 0 }),
+    check('price', 'Product price must be greater than or equal to zero').isInt({ min: 0 }),
+    check('quantity', 'Quantity is required').not().isEmpty(),
   ],
   async (req, res) => {
     // Check for validation errors
@@ -147,7 +147,7 @@ router.get(
  
     const productId = req.params.productId;
 
-    try {
+    try { 
       // Find the product by ID
       const product = await Product.findById(productId);
 

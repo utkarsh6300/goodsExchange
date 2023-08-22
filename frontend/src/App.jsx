@@ -46,8 +46,8 @@ function App() {
           path="/VerifyPhone"
           element={state.loggedIn ? <Navigate to="/" /> : <VerifyPhone />}
         />
-         <Route path="/product/:productId" element={<ProductDetails />} />
-         <Route path="/manage-product/:productId" element={<EditProduct />} />
+         <Route path="/product/:productId" element={state.loggedIn ?<ProductDetails />: <Navigate to="/login" />} />
+         <Route path="/manage-product/:productId" element={state.loggedIn ?<EditProduct />: <Navigate to="/login" />} />
       </Routes>
     </Router>
     </div>

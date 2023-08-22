@@ -18,7 +18,7 @@ function Signup() {
 
   const handleSignup = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/signup', {
+      const response = await axios.post('http://localhost:5000/api/signup', {
         username,
         name,
         phone,
@@ -34,7 +34,12 @@ function Signup() {
         console.log('Signup failed.');
       }
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
+      if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
+      dispatch({ type: 'SET_ERROR', payload: 'SigUp failed' });
       // dispatch customised error message
       console.error('An error occurred:', error);
     }

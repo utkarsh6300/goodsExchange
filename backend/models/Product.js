@@ -20,7 +20,8 @@ const ProductSchema = new mongoose.Schema({
     required: true,
   },
   quantity: {
-    type: Number,
+    type: String,
+    required: true,
     default: 1,
   },
   // array of images urls

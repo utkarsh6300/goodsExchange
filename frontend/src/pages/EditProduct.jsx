@@ -9,9 +9,13 @@ import {
   Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button
 } from '@mui/material';
 
+import { useAuth } from '../contexts/AuthContext';
+
 const EditProduct = () => {
   const { productId } = useParams();
   const navigate = useNavigate(); 
+
+  const { state,dispatch } = useAuth();
 
   const [productData, setProductData] = useState({
     name: '',
@@ -36,6 +40,7 @@ const EditProduct = () => {
         setProductData(response.data);
       })
       .catch(error => {
+        dispatch({ type: 'SET_ERROR', payload: 'Error fetching product details' });
         console.error('Error fetching product details:', error);
       });
   }, [productId]);
@@ -63,11 +68,18 @@ const handleSubmit = (event) => {
   
       axios.get(`http://localhost:5000/api/product/update-quantity/${productId}`, config)
         .then(response => {
+          dispatch({ type: 'SET_SUCCESS', payload: 'Product deleted successfully' });
           console.log('Product deleted successfully:', response.data);
           // Redirect to a different page or perform additional actions if needed
           navigate('/manage-products');
         })
         .catch(error => {
+          if(error.response.status==400)
+        { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+         }
+          dispatch({ type: 'SET_ERROR', payload: 'Error deleting product' });
           console.error('Error deleting product:', error);
         });
     } else {
@@ -76,10 +88,17 @@ const handleSubmit = (event) => {
       // Send product data to the API for updating
       axios.put(`http://localhost:5000/api/product/update/${productId}`, productData, config)
         .then(response => {
+          dispatch({ type: 'SET_SUCCESS', payload: 'Product updated successfully' });
           console.log('Product updated successfully:', response.data);
           navigate('/manage-products');
         })
         .catch(error => {
+          if(error.response.status==400)
+         { 
+            dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+            return;
+         }
+          dispatch({ type: 'SET_ERROR', payload: 'Error updating product' });
           console.error('Error updating product:', error);
         });
     }

@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { Grid, Container, Typography, Paper,Button, Card, CardContent, CardMedia, ImageList, ImageListItem, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 
+import { useAuth } from '../contexts/AuthContext';
+
 function ManageProducts() {
   const [products, setProducts] = useState([]);
   const [filterCategory, setFilterCategory] = useState('');
@@ -14,7 +16,7 @@ function ManageProducts() {
 
   const navigate = useNavigate(); 
 
- 
+  const { state,dispatch } = useAuth();
  
   useEffect(() => {
     // Fetch products from your API
@@ -29,6 +31,12 @@ function ManageProducts() {
         setProducts(response.data);
       })
       .catch(error => {
+        if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
+        dispatch({ type: 'SET_ERROR', payload: 'Error fetching products' });
         console.error('Error fetching products:', error);
       });
   }, []);

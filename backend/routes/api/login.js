@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../../models/User');
-const { oneOf, check, validationResult } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 const config = require('config');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -9,10 +9,7 @@ const jwt = require('jsonwebtoken');
 router.post(
   '/',
   [
-    oneOf([
-      check('phone', 'Invalid phone number').exists().isMobilePhone(),
-      check('username', 'Username required').exists().not().isEmpty(),
-    ]),
+    check('phone', 'Number should of 10 digits').isMobilePhone().isLength({ min: 10, max: 10 }),
     check('password', 'Password is required').exists(),
   ],
   async (req, res) => {
@@ -21,7 +18,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, phone, password } = req.body;
+    const {  phone, password } = req.body;
 
     try {
       let user;
@@ -29,9 +26,7 @@ router.post(
       // Check if user exists based on phone or username
       if (phone) {
         user = await User.findOne({ phone });
-      } else {
-        user = await User.findOne({ username });
-      }
+      } 
 
       if (!user) {
         return res.status(400).json({ errors: [{ msg: 'User does not exist' }] });

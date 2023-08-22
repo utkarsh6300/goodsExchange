@@ -3,12 +3,17 @@ import React, { useState } from 'react';
 import { TextField, Button, Container, Typography } from '@mui/material';
 import axios from 'axios';
 
+import { useAuth } from '../contexts/AuthContext';
+
+
 function PhoneNumberVerification() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [sentOtp, setSentOtp] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verificationInProgress, setVerificationInProgress] = useState(false);
+
+  const { state,dispatch} = useAuth();
 
   const handleSendOtp = async () => {
     setSendingOtp(true);
@@ -33,6 +38,11 @@ function PhoneNumberVerification() {
       }
     } catch (error) {
       // customised error message
+      if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
       dispatch({ type: 'SET_ERROR', payload: 'Failed to send OTP.' });
 
       console.error('An error occurred:', error);
@@ -62,6 +72,11 @@ function PhoneNumberVerification() {
       }
     } catch (error) {
       // customised error message
+      if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
       dispatch({ type: 'SET_ERROR', payload: 'OTP verification failed.' });
       console.error('An error occurred:', error);
     } finally {

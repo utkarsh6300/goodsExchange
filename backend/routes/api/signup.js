@@ -13,7 +13,7 @@ router.post(
     check('name', 'Name required').not().isEmpty(),
     check('phone', 'Invalid phone number').isMobilePhone(),
     check('email')
-    .optional() // Make email field optional
+    .optional({ checkFalsy: true, nullable: true }) // Make email field optional
     .isEmail().withMessage('Invalid email'), // Check for valid email
     check('password', 'Minimum length of password is 6 characters').isLength({ min: 6 }),
   ],
@@ -27,7 +27,7 @@ router.post(
 
     try {
       // Check if user exists by email (if provided)
-      if (email) {
+      if (email&&email.length()>0) {
         const userByEmail = await User.findOne({ email });
         if (userByEmail) {
           return res.status(400).json({ errors: [{ msg: 'User with this email already exists' }] });
@@ -35,10 +35,13 @@ router.post(
       }
       // Check if user exists
       let user = await User.findOne({ phone });
+      if ( user) {
+        return res.status(400).json({ errors: [{ msg: 'User already exists choose different phone number' }] });
+      }
       let userByUsername = await User.findOne({ username });
 
-      if (user || userByUsername) {
-        return res.status(400).json({ errors: [{ msg: 'User already exists' }] });
+      if ( userByUsername) {
+        return res.status(400).json({ errors: [{ msg: 'User already exists choose different username' }] });
       }
 
       // Create a new User instance
@@ -68,7 +71,7 @@ router.post(
       res.status(200).json({ token, id: user.id });
     } catch (err) {
       console.error(err);
-      console.error(err.message);
+      // console.error(err.message);
       res.status(500).send('Server error');
     }
   }

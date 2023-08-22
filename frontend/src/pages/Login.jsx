@@ -33,9 +33,15 @@ function Login() {
       }
     } catch (error) {
       if (error.response.status==401) {
+        dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg});
         navigate('/VerifyPhone');
         return;
       }
+      if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
       dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
       // dispatch customised error message
       console.error('An error occurred:', error);
@@ -53,6 +59,7 @@ function Login() {
             label="Phone Number"
             variant="outlined"
             margin="normal"
+            type='number'
             fullWidth
             value={phone}
             onChange={(e) => setPhoneNumber(e.target.value)}

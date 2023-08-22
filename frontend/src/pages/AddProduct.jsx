@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button, Input, Paper, ImageList, ImageListItem } from '@mui/material';
 import axios from 'axios';
 
+import { useAuth } from '../contexts/AuthContext';
+
 function AddProduct() {
   const [productData, setProductData] = useState({
     name: '',
@@ -13,6 +15,8 @@ function AddProduct() {
     images: [],
   });
    const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting" ];
+
+const { state,dispatch } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -56,6 +60,7 @@ function AddProduct() {
     // Send product data to the API
     axios.post('http://localhost:5000/api/product/save', formData,config)
       .then(response => {
+        dispatch({ type: 'SET_SUCCESS', payload: 'Product added successfully' });
         console.log('Product added successfully:', response.data);
         // Reset form fields after successful submission
         setProductData({
@@ -69,6 +74,12 @@ function AddProduct() {
         });
       })
       .catch(error => {
+        if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
+        dispatch({ type: 'SET_ERROR', payload: 'Error adding product' });
         console.error('Error adding product:', error);
       });
   };
@@ -130,7 +141,7 @@ function AddProduct() {
           margin="normal"
         />
         <TextField
-          label="Price"
+          label="Price per unit In Rupees"
           variant="outlined"
           fullWidth
           type="number"
@@ -144,7 +155,6 @@ function AddProduct() {
           label="Quantity"
           variant="outlined"
           fullWidth
-          type="number"
           name="quantity"
           value={productData.quantity}
           onChange={handleChange}

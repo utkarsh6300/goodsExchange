@@ -12,10 +12,15 @@ import {
   Button,
 } from '@mui/material';
 
+import { useAuth } from '../contexts/AuthContext';
+
 const ProductDetails = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState({});
   const [ownerPhoneNumber, setOwnerPhoneNumber] = useState('');
+
+  const { state,dispatch } = useAuth();
+
 //  //slideshow logic
 //   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -49,6 +54,12 @@ const ProductDetails = () => {
         setProduct(response.data);
       })
       .catch(error => {
+        if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
+        dispatch({ type: 'SET_ERROR', payload: 'Error fetching product details' });
         console.error('Error fetching product details:', error);
       });
   }, [productId]);
@@ -65,6 +76,12 @@ const ProductDetails = () => {
         setOwnerPhoneNumber(response.data.phoneNumber);
       })
       .catch(error => {
+        if(error.response.status==400)
+     { 
+      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+      return;
+    }
+        dispatch({ type: 'SET_ERROR', payload: 'Error fetching owner phone number' });
         console.error('Error fetching owner phone number:', error);
       });
   };
