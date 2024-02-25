@@ -6,6 +6,7 @@ import { Grid, Container, Typography, Paper,Button, Card, CardContent, CardMedia
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -26,7 +27,7 @@ function ManageProducts() {
         // ...formData.getHeaders(), // Include other headers from FormData
       },
     };
-    axios.get('http://localhost:5000/api/product/my-products',config)
+    axios.get(`${api_url}/product/my-products`,config)
       .then(response => {
         setProducts(response.data);
       })

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { api_url } from './constants/url';
 
 const verifyToken = async(token) => {
     // Implement your token verification logic here
@@ -9,7 +10,7 @@ const verifyToken = async(token) => {
               'token': token,
             },
           };
-        const response= await axios.get('http://localhost:5000/api/verify_token',config);
+        const response= await axios.get(`${api_url}/verify_token`,config);
         if(response.status==200) return true;
         else return false;
     } catch (error) {

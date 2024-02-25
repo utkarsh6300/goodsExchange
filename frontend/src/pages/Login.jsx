@@ -4,6 +4,7 @@ import { TextField, Button, Container, Typography } from '@mui/material';
 import axios from 'axios'; 
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 function Login() {
   const { dispatch} = useAuth();
@@ -14,7 +15,7 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/login', {
+      const response = await axios.post(`${api_url}/login`, {
         phone,
         password,
       });

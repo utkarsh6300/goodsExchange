@@ -1,0 +1,1 @@
+export const api_url="https://goodsexchange.onrender.com/api";

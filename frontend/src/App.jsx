@@ -24,7 +24,7 @@ function App() {
     <Router>
       <Navbar />
       <Routes>
-        <Route path="/" element={<Products />} />
+        <Route path="/"  element={state.loggedIn ? <Products /> : <Navigate to="/login" />} />
         <Route
           path="/manage-products"
           element={state.loggedIn ? <ManageProducts /> : <Navigate to="/login" />}
