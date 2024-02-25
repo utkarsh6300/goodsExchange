@@ -5,7 +5,6 @@ const Product = require('../../models/Product');
 const User=require('../../models/User');
 const authMiddleware = require('../../middlewares/authMiddleware');
 
-const config = require('config');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
@@ -18,9 +17,9 @@ const upload = multer({ storage: storage });
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.YOUR_CLOUD_NAME||config.get('YOUR_CLOUD_NAME'),
-  api_key:process.env.YOUR_API_KEY||config.get('YOUR_API_KEY') ,
-  api_secret:process.env.YOUR_API_SECRET||config.get('YOUR_API_SECRET') 
+  cloud_name: process.env.YOUR_CLOUD_NAME,
+  api_key:process.env.YOUR_API_KEY ,
+  api_secret:process.env.YOUR_API_SECRET
 });
 
 // Endpoint to save a new product (only owner can save)

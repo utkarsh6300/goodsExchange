@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
-const config = require('config');
 
 const twilio = require('twilio');
-const accountSid = config.get('YOUR_ACCOUNT_SID');
-const authToken = config.get('YOUR_AUTH_TOKEN');
-const twilioPhoneNumber = config.get('YOUR_TWILIO_PHONE_NUMBER');
+const accountSid = process.env.YOUR_ACCOUNT_SID;
+const authToken =  process.env.YOUR_AUTH_TOKEN;
+const twilioPhoneNumber =  process.env.YOUR_TWILIO_PHONE_NUMBER;
 
 // Initialize Twilio client
 const client = twilio(accountSid, authToken);
