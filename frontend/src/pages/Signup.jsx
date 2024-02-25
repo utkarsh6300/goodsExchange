@@ -4,6 +4,7 @@ import { TextField, Button, Container, Typography } from '@mui/material';
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 function Signup() {
   const [username, setUsername] = useState('');
@@ -18,7 +19,7 @@ function Signup() {
 
   const handleSignup = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/signup', {
+      const response = await axios.post(`${api_url}/signup`, {
         username,
         name,
         phone,

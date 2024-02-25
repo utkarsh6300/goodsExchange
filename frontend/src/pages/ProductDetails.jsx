@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 const ProductDetails = () => {
   const { productId } = useParams();
@@ -49,7 +50,7 @@ const ProductDetails = () => {
         'token': localStorage.getItem('token'),
       },
     };
-    axios.get(`http://localhost:5000/api/product/get/${productId}`, config)
+    axios.get(`${api_url}/product/get/${productId}`, config)
       .then(response => {
         setProduct(response.data);
       })
@@ -71,7 +72,7 @@ const ProductDetails = () => {
         'token': localStorage.getItem('token'),
       },
     };
-    axios.get(`http://localhost:5000/api/user/get-number/${product.owner}`, config)
+    axios.get(`${api_url}/user/get-number/${product.owner}`, config)
       .then(response => {
         setOwnerPhoneNumber(response.data.phoneNumber);
       })

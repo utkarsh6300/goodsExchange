@@ -3,6 +3,7 @@ import { Container, Typography, TextField, FormControl, InputLabel, Select, Menu
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 function AddProduct() {
   const [productData, setProductData] = useState({
@@ -58,7 +59,7 @@ const { state,dispatch } = useAuth();
       },
     };
     // Send product data to the API
-    axios.post('http://localhost:5000/api/product/save', formData,config)
+    axios.post(`${api_url}/product/save`, formData,config)
       .then(response => {
         dispatch({ type: 'SET_SUCCESS', payload: 'Product added successfully' });
         console.log('Product added successfully:', response.data);

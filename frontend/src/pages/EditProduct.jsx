@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 const EditProduct = () => {
   const { productId } = useParams();
@@ -35,7 +36,7 @@ const EditProduct = () => {
         'token': localStorage.getItem('token'),
       },
     };
-    axios.get(`http://localhost:5000/api/product/get/${productId}`, config)
+    axios.get(`${api_url}/product/get/${productId}`, config)
       .then(response => {
         setProductData(response.data);
       })
@@ -66,7 +67,7 @@ const handleSubmit = (event) => {
     if (event.nativeEvent.submitter.name === 'deleteButton') {
       
   
-      axios.get(`http://localhost:5000/api/product/update-quantity/${productId}`, config)
+      axios.get(`${api_url}/product/update-quantity/${productId}`, config)
         .then(response => {
           dispatch({ type: 'SET_SUCCESS', payload: 'Product deleted successfully' });
           console.log('Product deleted successfully:', response.data);
@@ -86,7 +87,7 @@ const handleSubmit = (event) => {
       // If the "Save Product Details" button is clicked
   
       // Send product data to the API for updating
-      axios.put(`http://localhost:5000/api/product/update/${productId}`, productData, config)
+      axios.put(`${api_url}/product/update/${productId}`, productData, config)
         .then(response => {
           dispatch({ type: 'SET_SUCCESS', payload: 'Product updated successfully' });
           console.log('Product updated successfully:', response.data);

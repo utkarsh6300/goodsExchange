@@ -8,6 +8,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -30,7 +31,7 @@ function ProductsPage() {
         // ...formData.getHeaders(), // Include other headers from FormData
       },
     };
-    axios.get('http://localhost:5000/api/product/get-all',config)
+    axios.get(`${api_url}/product/get-all`,config)
       .then(response => {
         setProducts(response.data);
       })

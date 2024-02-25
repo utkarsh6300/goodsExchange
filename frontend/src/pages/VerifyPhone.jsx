@@ -4,6 +4,7 @@ import { TextField, Button, Container, Typography } from '@mui/material';
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
+import { api_url } from '../constants/url';
 
 
 function PhoneNumberVerification() {
@@ -19,7 +20,7 @@ function PhoneNumberVerification() {
     setSendingOtp(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/verify/send-verification-code', {
+      const response = await axios.post(`${api_url}/verify/send-verification-code`, {
         phone:phoneNumber,
       });
 
@@ -54,7 +55,7 @@ function PhoneNumberVerification() {
     setVerificationInProgress(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/verify/verify-code', {
+      const response = await axios.post(`${api_url}/verify/verify-code`, {
         phone:phoneNumber,
         code:otp,
       });
