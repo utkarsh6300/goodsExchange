@@ -1,1 +1,1 @@
-export const api_url="https://goodsexchange.onrender.com/api";
+export const api_url=process.env.api_url;
