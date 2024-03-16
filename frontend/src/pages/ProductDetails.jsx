@@ -96,7 +96,7 @@ const ProductDetails = () => {
         <Typography variant="h6">Name: {product.name}</Typography>
         <Typography variant="body1">Category: {product.category}</Typography>
         <Typography variant="body1">Subcategory: {product.subCategory}</Typography>
-        <Typography variant="body1">Price: ${product.price}</Typography>
+        <Typography variant="body1">Price: ₹ {product.price}</Typography>
         <Typography variant="body1">Quantity: {product.quantity}</Typography>
         <Typography variant="h6">Images:</Typography>
         <ImageList cols={3} rowHeight={460} style={{ padding: '16px' }} >
