@@ -13,6 +13,7 @@ import Navbar from './components/Navbar';
 import AddProduct from './pages/AddProduct';
 import ProductDetails from './pages/ProductDetails';
 import EditProduct from './pages/EditProduct';
+import Home from './pages/Home';
 
 import { useAuth } from './contexts/AuthContext';
 
@@ -24,7 +25,8 @@ function App() {
     <Router>
       <Navbar />
       <Routes>
-        <Route path="/"  element={state.loggedIn ? <Products /> : <Navigate to="/login" />} />
+        <Route path="/"  element={state.loggedIn ? <Products /> : <Home/>} />
+        <Route path="/home"  element={ <Home/> } />
         <Route
           path="/manage-products"
           element={state.loggedIn ? <ManageProducts /> : <Navigate to="/login" />}
