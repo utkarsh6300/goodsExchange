@@ -57,7 +57,7 @@ function Navbar() {
                   <Link to="/" style={{ flexGrow: 1 }}>
                    <img src={logo} alt="Goods Exchange" style={{height: '85px' }} />
                   </Link>
-                  <ListItem  component={Link} to="/" onClick={toggleDrawer(false)}>
+                  <ListItem  component={Link} to="/home" onClick={toggleDrawer(false)}>
                     <ListItemText primary="Home" />
                   </ListItem>
                   <ListItem  component={Link} to="/products" onClick={toggleDrawer(false)}>
