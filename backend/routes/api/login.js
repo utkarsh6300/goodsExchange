@@ -30,9 +30,9 @@ router.post(
       if (!user) {
         return res.status(400).json({ errors: [{ msg: 'User does not exist' }] });
       }
-      else if(!user.isVerified){
-        return res.status(401).json({ errors: [{ msg: 'Users phone is not verified' }] });
-      }
+      // else if(!user.isVerified){
+      //   return res.status(401).json({ errors: [{ msg: 'Users phone is not verified' }] });
+      // }
 
       // Compare passwords
       const isMatch = await bcrypt.compare(password, user.password);

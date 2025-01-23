@@ -25,7 +25,7 @@ function App() {
     <Router>
       <Navbar />
       <Routes>
-        <Route path="/"  element={state.loggedIn ? <Products /> : <Home/>} />
+        <Route path="/"  element={ <Products />} />
         <Route path="/home"  element={ <Home/> } />
         <Route
           path="/manage-products"
@@ -33,7 +33,7 @@ function App() {
         />
         <Route
           path="/products"
-          element={state.loggedIn ? <Products /> : <Navigate to="/login" />}
+          element={ <Products />}
         />
         <Route
           path="/add-product"
@@ -46,9 +46,9 @@ function App() {
         />
         <Route
           path="/VerifyPhone"
-          element={state.loggedIn ? <Navigate to="/" /> : <VerifyPhone />}
+          element={ <VerifyPhone />}
         />
-         <Route path="/product/:productId" element={state.loggedIn ?<ProductDetails />: <Navigate to="/login" />} />
+         <Route path="/product/:productId" element={<ProductDetails />} />
          <Route path="/manage-product/:productId" element={state.loggedIn ?<EditProduct />: <Navigate to="/login" />} />
       </Routes>
     </Router>

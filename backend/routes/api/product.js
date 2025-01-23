@@ -173,7 +173,7 @@ router.get(
 
 
 
-router.get('/get-all', authMiddleware,async (req, res) => {
+router.get('/get-all',async (req, res) => {
   try {
     const products = await Product.find({ quantity:{$gt:0}}).limit(50);
     res.json(products);
@@ -184,7 +184,7 @@ router.get('/get-all', authMiddleware,async (req, res) => {
 });
 
 // Endpoint to get a product by ID
-router.get('/get/:productId', authMiddleware,async (req, res) => {
+router.get('/get/:productId',async (req, res) => {
   const productId = req.params.productId;
 
   try {
