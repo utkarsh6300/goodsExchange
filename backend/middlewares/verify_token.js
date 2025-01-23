@@ -15,7 +15,13 @@ router.get('/',[],async(req,res)=>{
     res.status(200).json({msg:"Token is  valid"});
 
 } catch (error) {
-    console.log(error); 
+    console.log(error.message); 
+    if(error.message==='invalid token'){
+        return res.status(401).json({errors:[{msg:"Token is not valid"}]});
+    }
+    if(error.message==='jwt expired'){
+        return res.status(401).json({errors:[{msg:"Token is expired"}]});
+    }
     res.status(500).send('authentication error');
        
 }
