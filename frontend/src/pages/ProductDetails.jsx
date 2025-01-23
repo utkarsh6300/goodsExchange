@@ -1,6 +1,8 @@
 
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { useParams } from 'react-router';
 import axios from 'axios';
 import {
@@ -19,6 +21,7 @@ const ProductDetails = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState({});
   const [ownerPhoneNumber, setOwnerPhoneNumber] = useState('');
+  const navigate = useNavigate();
 
   const { state,dispatch } = useAuth();
 
@@ -81,8 +84,18 @@ const ProductDetails = () => {
      { 
       dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
       return;
-    }
-        dispatch({ type: 'SET_ERROR', payload: 'Error fetching owner phone number' });
+    } else if(error.response.status==401)
+      { 
+        dispatch({ type: 'SET_ERROR', payload: "needs to login" });
+        navigate("/login")
+        return;
+      }  else if(error.response.status==409)
+        { 
+          dispatch({ type: 'SET_ERROR', payload: "needs to verify number" });
+          navigate("/VerifyPhone")
+          return;
+        }
+      dispatch({ type: 'SET_ERROR', payload: 'Error fetching owner phone number' });
         console.error('Error fetching owner phone number:', error);
       });
   };

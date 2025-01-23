@@ -184,7 +184,7 @@ router.get('/get-all',async (req, res) => {
 });
 
 // Endpoint to get a product by ID
-router.get('/get/:productId', authMiddleware,async (req, res) => {
+router.get('/get/:productId',async (req, res) => {
   const productId = req.params.productId;
 
   try {

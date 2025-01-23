@@ -10,15 +10,18 @@ const UserAccess = require('../../models/UserAccess');
 // Endpoint to get a user's phone number by ID
 router.get('/get-number/:userId', authMiddleware,async (req, res) => {
   const userId = req.params.userId;
-
   try {
-
-
+    const response = await User.findById(req.user.id).select('isVerified');
+    if (!response.isVerified) {
+     return res.status(409).json({ msg: 'verify your number to access' });
+   }
 
     // Find the user by ID
     const phoneNumber = await User.findById(userId).select('phone');
    // add feature to add access list who accesed whom number.
-
+   if (!phoneNumber) {
+    return res.status(404).json({ msg: 'User not found' });
+  }
     // Create a new UserAccess record
     const userAccess = new UserAccess({
       accessedBy: req.user.id, // The user who accessed

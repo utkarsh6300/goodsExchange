@@ -28,7 +28,7 @@ function Signup() {
       });
       if (response.status==200) {
         dispatch({ type: 'SET_SUCCESS', payload: 'SignUp successful now verify phone' });
-        navigate('/VerifyPhone'); // Redirect to login page after successful signup
+        navigate('/login'); // Redirect to login page after successful signup
       } else {
         // Handle signup failure
         dispatch({ type: 'SET_ERROR', payload: 'SigUp failed' });
