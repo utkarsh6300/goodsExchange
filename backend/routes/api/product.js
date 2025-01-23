@@ -173,7 +173,7 @@ router.get(
 
 
 
-router.get('/get-all', authMiddleware,async (req, res) => {
+router.get('/get-all',async (req, res) => {
   try {
     const products = await Product.find({ quantity:{$gt:0}}).limit(50);
     res.json(products);
