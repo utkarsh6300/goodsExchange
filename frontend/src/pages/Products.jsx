@@ -81,56 +81,90 @@ function ProductsPage() {
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>
-        All Products
-      </Typography>
-      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Select value={filterCategory} onChange={handleFilterCategoryChange}>
-          <MenuItem value="">All Categories</MenuItem>
-          {categories.map(category => (
-            <MenuItem key={category} value={category}>{category}</MenuItem>
-          ))}
-        </Select>
-        <Select value={sortOption} onChange={handleSortOptionChange}>
-          <MenuItem value="time">Sort by Time</MenuItem>
-          <MenuItem value="price">Sort by Price</MenuItem>
-        </Select>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Search products"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </div>
-      <Grid container spacing={2}>
-        {sortedProducts.map(product => (
-          <Grid item xs={12} sm={6} key={product._id} onClick={() => navigate(`/product/${product._id}`)}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1">Product Name {product.name}</Typography>
-                <Typography variant="body1">RS. {product.price} only</Typography>
-                <Typography variant="body2">Quantity: {product.quantity}</Typography>
-              </CardContent>
-              <ImageList cols={2} rowHeight={160} style={{ padding: '16px' }}>
-                {product.imagesUrls.map((imageUrl, index) => (
-                  <ImageListItem key={index}>
-                    <img src={imageUrl} alt={`Product ${product._id} Image ${index}`} />
-                  </ImageListItem>
-                ))}
-              </ImageList>
-            </Card>
-          </Grid>
-        ))}
+  <Typography variant="h4" gutterBottom>
+    All Products
+  </Typography>
+  <div
+    style={{
+      marginBottom: '16px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}
+  >
+    <Select value={filterCategory} onChange={handleFilterCategoryChange}>
+      <MenuItem value="">All Categories</MenuItem>
+      {categories.map((category) => (
+        <MenuItem key={category} value={category}>
+          {category}
+        </MenuItem>
+      ))}
+    </Select>
+    <Select value={sortOption} onChange={handleSortOptionChange}>
+      <MenuItem value="time">Sort by Time</MenuItem>
+      <MenuItem value="price">Sort by Price</MenuItem>
+    </Select>
+    <TextField
+      variant="outlined"
+      size="small"
+      placeholder="Search products"
+      value={searchTerm}
+      onChange={handleSearchChange}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon />
+          </InputAdornment>
+        ),
+      }}
+    />
+  </div>
+  <Grid container spacing={2}>
+    {sortedProducts.map((product) => (
+      <Grid
+        item
+        xs={12}
+        sm={6}
+        md={4}
+        key={product._id}
+        onClick={() => navigate(`/product/${product._id}`)}
+      >
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle1">Product Name: {product.name}</Typography>
+            <Typography variant="body1">RS. {product.price} only</Typography>
+            <Typography variant="body2">Quantity: {product.quantity}</Typography>
+          </CardContent>
+          <ImageList cols={1} style={{ padding: '16px' }}>
+            {
+            product.imagesUrls.map((imageUrl, index) => (
+              <ImageListItem
+                key={index}
+                style={{
+                  overflow: 'hidden',
+                  borderRadius: '8px',
+                }}
+              >
+                <img
+                  src={imageUrl}
+                  alt={`Product ${product._id} Image ${index}`}
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                  }}
+                />
+              </ImageListItem>
+            ))
+            }
+          </ImageList>
+        </Card>
       </Grid>
-    </Container>
+    ))}
+  </Grid>
+</Container>
+
   );
 }
 

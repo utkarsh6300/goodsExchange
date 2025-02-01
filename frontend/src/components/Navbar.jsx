@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Snackbar, Alert, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemText, ListItemIcon } from '@mui/material';
+import { AppBar, Toolbar, Button, Snackbar, Alert, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemText } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import MenuIcon from '@mui/icons-material/Menu';
 import logo from '../assets/goods-exchange-1.png';
@@ -89,7 +89,7 @@ function Navbar() {
            <Link to="/" style={{ flexGrow: 1 }}>
              <img src={logo} alt="Goods Exchange" style={{marginBottom: '-4px',marginLeft:'-25px',height: '85px' }} />
            </Link>
-            <Button color="inherit" component={Link} to="/" style={navLinkStyle}>
+            <Button color="inherit" component={Link} to="/home" style={navLinkStyle}>
             Home
           </Button>
           <Button color="inherit" component={Link} to="/products" style={navLinkStyle}>

@@ -85,18 +85,30 @@ function ManageProducts() {
       </div>
       <Grid container spacing={2}>   
         {sortedProducts.map(product => (
-          <Grid item xs={12} sm={6} key={product._id} onClick={() => navigate(`/manage-product/${product._id}`) } >
+          <Grid item xs={12} sm={6} md={4} key={product._id} onClick={() => navigate(`/manage-product/${product._id}`) } >
             <Card  >  
               <CardContent >
                 <Typography variant="subtitle1">Product Name {product.name}</Typography>
                 <Typography variant="body1">RS. {product.price} only</Typography>
-                <Typography variant="body2">Quantity: {product.quantity}</Typography>
-                
+                <Typography variant="body2">Quantity: {product.quantity}</Typography>        
               </CardContent>
-              <ImageList cols={2} rowHeight={160} style={{ padding: '16px' }}>
-                {product.imagesUrls.map((imageUrl, index) => (
-                  <ImageListItem key={index}>
-                    <img src={imageUrl} alt={`Product ${product._id} Image ${index}`} />
+              <ImageList cols={1}style={{ padding: '16px' }}>
+                {
+                product.imagesUrls.map((imageUrl, index) => (
+                  <ImageListItem key={index}
+                  style={{
+                    overflow: 'hidden',
+                    borderRadius: '8px',
+                  }}  
+                  >
+                    <img src={imageUrl} alt={`Product ${product._id} Image ${index}`} 
+                       style={{
+                        width: '100%',
+                        height: '200px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                      }}
+                    />
                   </ImageListItem>
                 ))}
               </ImageList>
