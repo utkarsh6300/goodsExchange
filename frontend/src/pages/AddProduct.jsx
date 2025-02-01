@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button, Input, Paper, ImageList, ImageListItem } from '@mui/material';
+import {
+  Container,
+  Typography,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Paper,
+  ImageList,
+  ImageListItem,
+} from '@mui/material';
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -15,13 +27,36 @@ function AddProduct() {
     quantity: '',
     images: [],
   });
-  const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
+  const [imageError, setImageError] = useState('');
+  const categories = [
+    'smartphones',
+    'laptops',
+    'fragrances',
+    'skincare',
+    'groceries',
+    'home-decoration',
+    'furniture',
+    'tops',
+    'womens-dresses',
+    'womens-shoes',
+    'mens-shirts',
+    'mens-shoes',
+    'mens-watches',
+    'womens-watches',
+    'womens-bags',
+    'womens-jewellery',
+    'sunglasses',
+    'automotive',
+    'motorcycle',
+    'lighting',
+    'others',
+  ];
 
-const { state,dispatch } = useAuth();
+  const { state, dispatch } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setProductData(prevData => ({
+    setProductData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
@@ -29,18 +64,31 @@ const { state,dispatch } = useAuth();
 
   const handleImagesChange = (event) => {
     const files = event.target.files;
-    if (files.length > 0) {
-      setProductData(prevData => ({
-        ...prevData,
-        images: Array.from(files),
-      }));
+    const maxFiles = 3;
+    const maxSize = 1 * 1024 * 1024; // 1MB
+
+    if (files.length > maxFiles) {
+      setImageError(`You can only upload up to ${maxFiles} images.`);
+      return;
     }
+
+    const oversizedFiles = Array.from(files).filter((file) => file.size > maxSize);
+
+    if (oversizedFiles.length > 0) {
+      setImageError('Each image must be smaller than 1MB.');
+      return;
+    }
+
+    setImageError('');
+    setProductData((prevData) => ({
+      ...prevData,
+      images: Array.from(files),
+    }));
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    // Create FormData for sending files
     const formData = new FormData();
     formData.append('name', productData.name);
     formData.append('description', productData.description);
@@ -48,22 +96,22 @@ const { state,dispatch } = useAuth();
     formData.append('subCategory', productData.subCategory);
     formData.append('price', productData.price);
     formData.append('quantity', productData.quantity);
-    productData.images.forEach(image => {
+
+    productData.images.forEach((image) => {
       formData.append('images', image);
     });
 
     const config = {
       headers: {
-        'token': localStorage.getItem('token'),
-        // ...formData.getHeaders(), // Include other headers from FormData
+        token: localStorage.getItem('token'),
       },
     };
-    // Send product data to the API
-    axios.post(`${api_url}/product/save`, formData,config)
-      .then(response => {
+
+    axios
+      .post(`${api_url}/product/save`, formData, config)
+      .then((response) => {
         dispatch({ type: 'SET_SUCCESS', payload: 'Product added successfully' });
         console.log('Product added successfully:', response.data);
-        // Reset form fields after successful submission
         setProductData({
           name: '',
           description: '',
@@ -74,12 +122,11 @@ const { state,dispatch } = useAuth();
           images: [],
         });
       })
-      .catch(error => {
-        if(error.response.status==400)
-     { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-    }
+      .catch((error) => {
+        if (error.response.status === 400) {
+          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+          return;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Error adding product' });
         console.error('Error adding product:', error);
       });
@@ -91,7 +138,6 @@ const { state,dispatch } = useAuth();
         Add Product
       </Typography>
       <form onSubmit={handleSubmit}>
-
         <TextField
           label="Name of product"
           variant="outlined"
@@ -107,7 +153,7 @@ const { state,dispatch } = useAuth();
           variant="outlined"
           name="description"
           fullWidth
-          multiline   
+          multiline
           rows={12}
           value={productData.description}
           onChange={handleChange}
@@ -122,14 +168,11 @@ const { state,dispatch } = useAuth();
             onChange={handleChange}
             required
           >
-            <MenuItem value="Electronics">Electronics</MenuItem>
-            <MenuItem value="Clothing">Clothing</MenuItem>
-            {/* Add more categories */
-            categories.map((category) => (
-              <MenuItem key={category} value={category}>{category}</MenuItem>
-            ))
-            
-            }
+            {categories.map((category) => (
+              <MenuItem key={category} value={category}>
+                {category}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <TextField
@@ -169,13 +212,22 @@ const { state,dispatch } = useAuth();
           onChange={handleImagesChange}
           style={{ marginTop: '16px' }}
         />
-           {productData.images.length > 0 && (
+        {imageError && (
+          <Typography color="error" variant="subtitle2" style={{ marginTop: '8px' }}>
+            {imageError}
+          </Typography>
+        )}
+        {productData.images.length > 0 && (
           <Paper elevation={3} style={{ marginTop: '16px', padding: '16px' }}>
             <Typography variant="subtitle1">Uploaded Images:</Typography>
             <ImageList cols={4} rowHeight={160} gap={16}>
               {productData.images.map((image, index) => (
                 <ImageListItem key={index}>
-                  <img src={URL.createObjectURL(image)} alt={`Image ${index}`} style={{ maxWidth: '100%' }} />
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt={`Image ${index}`}
+                    style={{ maxWidth: '100%' }}
+                  />
                 </ImageListItem>
               ))}
             </ImageList>
