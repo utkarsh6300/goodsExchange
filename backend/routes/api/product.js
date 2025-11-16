@@ -175,7 +175,25 @@ router.get(
 
 router.get('/get-all',async (req, res) => {
   try {
-    const products = await Product.find({ quantity:{$gt:0}}).limit(50);
+    const { category, searchTerm, sortOption } = req.query;
+    let filter = { quantity: { $gt: 0 } };
+    let sort = {};
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (searchTerm) {
+      filter.name = { $regex: searchTerm, $options: 'i' }; // Case-insensitive search
+    }
+
+    if (sortOption === 'price') {
+      sort.price = 1; // Ascending order
+    } else {
+      sort.createdAt = -1; // Default to newest first
+    }
+
+    const products = await Product.find(filter).sort(sort).limit(50);
     res.json(products);
   } catch (err) {
     console.error(err);

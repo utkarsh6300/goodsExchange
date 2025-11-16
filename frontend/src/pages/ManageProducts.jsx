@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-
-
 import { Container, Typography } from '@mui/material';
 
 import { productService } from '../services';
@@ -13,7 +11,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 import ProductList from '../components/ProductList';
 
-import ProductFilter from '../components/ProductFilter';
 
 
 

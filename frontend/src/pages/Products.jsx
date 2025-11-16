@@ -1,26 +1,25 @@
 
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Container, Typography
+  Container, Typography, Button
 } from '@mui/material';
 import { productService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
 import ProductList from '../components/ProductList';
-import ProductFilter from '../components/ProductFilter';
+import ProductFilterSidebar from '../components/ProductFilterSidebar';
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [filterCategory, setFilterCategory] = useState('');
   const [sortOption, setSortOption] = useState('time'); // Default sorting by time
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
 
- const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
-
+  const categories = ["smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting", "others"];
 
   const navigate = useNavigate();
-  const {  dispatch } = useAuth();
-
+  const { dispatch } = useAuth();
 
   useEffect(() => {
     // Fetch products from your API
@@ -80,15 +79,8 @@ function ProductsPage() {
       <Typography variant="h4" gutterBottom>
         All Products
       </Typography>
-      <ProductFilter
-        filterCategory={filterCategory}
-        handleFilterCategoryChange={handleFilterCategoryChange}
-        sortOption={sortOption}
-        handleSortOptionChange={handleSortOptionChange}
-        searchTerm={searchTerm}
-        handleSearchChange={handleSearchChange}
-        categories={categories}
-      />
+      <Button onClick={() => setIsFilterSidebarOpen(true)}>Filters</Button>
+      <ProductFilterSidebar open={isFilterSidebarOpen} onClose={() => setIsFilterSidebarOpen(false)} />
       <ProductList products={sortedProducts} onProductClick={handleProductClick} />
     </Container>
   );
