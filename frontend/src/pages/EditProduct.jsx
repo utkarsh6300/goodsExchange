@@ -1,27 +1,23 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
-
-import { useNavigate } from 'react-router-dom'; 
-
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import {
-  Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button
-} from '@mui/material';
-
+import { Container, Typography, Button } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { api_url } from '../constants/url';
+import ProductForm from '../components/ProductForm';
 
 const EditProduct = () => {
   const { productId } = useParams();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const { dispatch } = useAuth();
 
   const [productData, setProductData] = useState({
     name: '',
     description: '',
-    category: '', 
+    category: '',
     subCategory: '',
     price: '',
     quantity: ''
@@ -114,78 +110,11 @@ const handleSubmit = (event) => {
         If you want to update images delete this product and create a new one
       </Typography>
       <form onSubmit={handleSubmit}>
-
-        <TextField
-          label="Name of product"
-          variant="outlined"
-          fullWidth
-          name="name"
-          value={productData.name}
-          onChange={handleChange}
-          required
-          margin="normal"
+        <ProductForm
+          productData={productData}
+          handleChange={handleChange}
+          categories={categories}
         />
-        <TextField
-          label="Description"
-          variant="outlined"
-          fullWidth
-          multiline   
-          rows={12}
-          name="description"
-          value={productData.description}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Category*</InputLabel>
-          <Select
-            name="category"
-            value={productData.category}
-            onChange={handleChange}
-            required
-          >
-            <MenuItem value="Electronics">Electronics</MenuItem>
-            <MenuItem value="Clothing">Clothing</MenuItem>
-            {/* Add more categories */
-            categories.map((category) => (
-              <MenuItem key={category} value={category}>{category}</MenuItem>
-            ))
-            
-            }
-          </Select>
-        </FormControl>
-        <TextField
-          label="Subcategory"
-          variant="outlined"
-          fullWidth
-          name="subCategory"
-          value={productData.subCategory}
-          onChange={handleChange}
-          margin="normal"
-        />
-        <TextField
-          label="Price"
-          variant="outlined"
-          fullWidth
-          type="number"
-          name="price"
-          value={productData.price}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <TextField
-          label="Quantity"
-          variant="outlined"
-          fullWidth
-          type="number"
-          name="quantity"
-          value={productData.quantity}
-          onChange={handleChange}
-          required
-        />    
-       
         <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }}>
          Save Product Details
         </Button>
@@ -194,13 +123,6 @@ const handleSubmit = (event) => {
         </Button>   
       </form>
     </Container>
-
-
-      
-         
-         
-        
-    
   );
 };
 

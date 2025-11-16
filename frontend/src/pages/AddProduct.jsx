@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button, Paper, ImageList, ImageListItem } from '@mui/material';
+import { Container, Typography, Button, Paper, ImageList, ImageListItem } from '@mui/material';
 import { productService } from '../services';
-
 import { useAuth } from '../contexts/AuthContext';
+import ProductForm from '../components/ProductForm';
 
 function AddProduct() {
   const [productData, setProductData] = useState({
@@ -84,75 +84,10 @@ const { dispatch } = useAuth();
         Add Product
       </Typography>
       <form onSubmit={handleSubmit}>
-
-        <TextField
-          label="Name of product"
-          variant="outlined"
-          fullWidth
-          name="name"
-          value={productData.name}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <TextField
-          label="Description"
-          variant="outlined"
-          name="description"
-          fullWidth
-          multiline   
-          rows={12}
-          value={productData.description}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Category*</InputLabel>
-          <Select
-            name="category"
-            value={productData.category}
-            onChange={handleChange}
-            required
-          >
-            <MenuItem value="Electronics">Electronics</MenuItem>
-            <MenuItem value="Clothing">Clothing</MenuItem>
-            {/* Add more categories */
-            categories.map((category) => (
-              <MenuItem key={category} value={category}>{category}</MenuItem>
-            ))
-            
-            }
-          </Select>
-        </FormControl>
-        <TextField
-          label="Subcategory"
-          variant="outlined"
-          fullWidth
-          name="subCategory"
-          value={productData.subCategory}
-          onChange={handleChange}
-          margin="normal"
-        />
-        <TextField
-          label="Price per unit In Rupees"
-          variant="outlined"
-          fullWidth
-          type="number"
-          name="price"
-          value={productData.price}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <TextField
-          label="Quantity"
-          variant="outlined"
-          fullWidth
-          name="quantity"
-          value={productData.quantity}
-          onChange={handleChange}
-          required
+        <ProductForm
+          productData={productData}
+          handleChange={handleChange}
+          categories={categories}
         />
         <input
           type="file"
