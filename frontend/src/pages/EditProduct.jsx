@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 
 import { useNavigate } from 'react-router-dom'; 
@@ -16,7 +16,7 @@ const EditProduct = () => {
   const { productId } = useParams();
   const navigate = useNavigate(); 
 
-  const { state,dispatch } = useAuth();
+  const { dispatch } = useAuth();
 
   const [productData, setProductData] = useState({
     name: '',

@@ -1,11 +1,10 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography } from '@mui/material';
-import axios from 'axios';
+import { verifyService } from '../services';
 
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
-
 
 function PhoneNumberVerification() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -14,17 +13,16 @@ function PhoneNumberVerification() {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verificationInProgress, setVerificationInProgress] = useState(false);
 
-  const { state,dispatch} = useAuth();
+  const navigate = useNavigate();
+  const { dispatch} = useAuth();
 
   const handleSendOtp = async () => {
     setSendingOtp(true);
 
     try {
-      const response = await axios.post(`${api_url}/verify/send-verification-code`, {
-        phone:phoneNumber,
-      });
+      const response = await verifyService.sendVerificationCode(phoneNumber);
 
-      if (response.status==200) {
+      if (response.status == 200) {
         setSendingOtp(false);
         setSentOtp(true);
         // OTP sent successfully, keep OTP input field visible
@@ -55,12 +53,9 @@ function PhoneNumberVerification() {
     setVerificationInProgress(true);
 
     try {
-      const response = await axios.post(`${api_url}/verify/verify-code`, {
-        phone:phoneNumber,
-        code:otp,
-      });
+      const response = await verifyService.verifyCode(phoneNumber, otp);
 
-      if (response.status==200) {
+      if (response.status == 200) {
         // Phone number verified successfully, proceed to next step
         dispatch({ type: 'SET_SUCCESS', payload: 'Phone number verified successfully.' });
 

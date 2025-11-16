@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button, Input, Paper, ImageList, ImageListItem } from '@mui/material';
-import axios from 'axios';
+import { useState } from 'react';
+import { Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button, Paper, ImageList, ImageListItem } from '@mui/material';
+import { productService } from '../services';
 
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
 
 function AddProduct() {
   const [productData, setProductData] = useState({
@@ -17,7 +16,7 @@ function AddProduct() {
   });
   const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
-const { state,dispatch } = useAuth();
+const { dispatch } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -52,14 +51,8 @@ const { state,dispatch } = useAuth();
       formData.append('images', image);
     });
 
-    const config = {
-      headers: {
-        'token': localStorage.getItem('token'),
-        // ...formData.getHeaders(), // Include other headers from FormData
-      },
-    };
     // Send product data to the API
-    axios.post(`${api_url}/product/save`, formData,config)
+    productService.saveProduct(formData)
       .then(response => {
         dispatch({ type: 'SET_SUCCESS', payload: 'Product added successfully' });
         console.log('Product added successfully:', response.data);

@@ -1,10 +1,11 @@
 
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useParams } from 'react-router';
-import axios from 'axios';
+import { productService } from '../services';
+import { userService } from '../services';
 import {
   Container,
   Typography,
@@ -15,7 +16,6 @@ import {
 } from '@mui/material';
 
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
 
 const ProductDetails = () => {
   const { productId } = useParams();
@@ -23,7 +23,7 @@ const ProductDetails = () => {
   const [ownerPhoneNumber, setOwnerPhoneNumber] = useState('');
   const navigate = useNavigate();
 
-  const { state,dispatch } = useAuth();
+  const { dispatch } = useAuth();
 
 //  //slideshow logic
 //   const [activeSlide, setActiveSlide] = useState(0);
@@ -48,21 +48,15 @@ const ProductDetails = () => {
 
   useEffect(() => {
     // Fetch product details
-    const config = {
-      headers: { 
-        'token': localStorage.getItem('token'),
-      },
-    };
-    axios.get(`${api_url}/product/get/${productId}`, config)
+    productService.getProductById(productId)
       .then(response => {
         setProduct(response.data);
       })
       .catch(error => {
-        if(error.response.status==400)
-     { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-    }
+        if (error.response.status == 400) {
+          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+          return;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Error fetching product details' });
         console.error('Error fetching product details:', error);
       });
@@ -70,32 +64,24 @@ const ProductDetails = () => {
 
   const fetchOwnerPhoneNumber = () => {
     // Fetch owner's phone number using owner's ID
-    const config = {
-      headers: {
-        'token': localStorage.getItem('token'),
-      },
-    };
-    axios.get(`${api_url}/user/get-number/${product.owner}`, config)
+    userService.getPhoneNumber(product.owner)
       .then(response => {
         setOwnerPhoneNumber(response.data.phoneNumber);
       })
       .catch(error => {
-        if(error.response.status==400)
-     { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-    } else if(error.response.status==401)
-      { 
-        dispatch({ type: 'SET_ERROR', payload: "needs to login" });
-        navigate("/login")
-        return;
-      }  else if(error.response.status==409)
-        { 
+        if (error.response.status == 400) {
+          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+          return;
+        } else if (error.response.status == 401) {
+          dispatch({ type: 'SET_ERROR', payload: "needs to login" });
+          navigate("/login");
+          return;
+        } else if (error.response.status == 409) {
           dispatch({ type: 'SET_ERROR', payload: "needs to verify number" });
-          navigate("/VerifyPhone")
+          navigate("/VerifyPhone");
           return;
         }
-      dispatch({ type: 'SET_ERROR', payload: 'Error fetching owner phone number' });
+        dispatch({ type: 'SET_ERROR', payload: 'Error fetching owner phone number' });
         console.error('Error fetching owner phone number:', error);
       });
   };
@@ -146,10 +132,10 @@ const ProductDetails = () => {
       <Typography variant="h6">Do not misuse number,we will track of who accesed whom number and will give it to police if required. </Typography>
       
         {ownerPhoneNumber ? (
-          <Typography variant="body1">Owner's Phone Number: {ownerPhoneNumber}</Typography>
+          <Typography variant="body1">Owner&apos;s Phone Number: {ownerPhoneNumber}</Typography>
         ) : (
           <Button variant="contained" color="primary" onClick={fetchOwnerPhoneNumber}>
-            Get Owner's Phone Number
+            Get Owner&apos;s Phone Number
           </Button>
         )}
       </Paper>

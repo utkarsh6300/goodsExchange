@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 
-import { Grid, Container, Typography, Paper,Button, Card, CardContent, CardMedia, ImageList, ImageListItem, Select, MenuItem } from '@mui/material';
-import axios from 'axios';
+import { Grid, Container, Typography, Card, CardContent,  ImageList, ImageListItem, Select, MenuItem } from '@mui/material';
+import { productService } from '../services';
 
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
 
 function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -17,17 +16,11 @@ function ManageProducts() {
 
   const navigate = useNavigate(); 
 
-  const { state,dispatch } = useAuth();
+  const { dispatch } = useAuth();
  
   useEffect(() => {
     // Fetch products from your API
-    const config = {
-      headers: {
-        'token': localStorage.getItem('token'),
-        // ...formData.getHeaders(), // Include other headers from FormData
-      },
-    };
-    axios.get(`${api_url}/product/my-products`,config)
+    productService.getMyProducts()
       .then(response => {
         setProducts(response.data);
       })
