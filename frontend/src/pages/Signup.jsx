@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography } from '@mui/material';
-import axios from 'axios';
+import { authService } from '../services';
 
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
 
 function Signup() {
   const [username, setUsername] = useState('');
@@ -14,18 +13,12 @@ function Signup() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const { state,dispatch} = useAuth();
+  const { dispatch} = useAuth();
 
 
   const handleSignup = async () => {
     try {
-      const response = await axios.post(`${api_url}/signup`, {
-        username,
-        name,
-        phone,
-        email, 
-        password,
-      });
+      const response = await authService.signup(username, name, phone, email, password);
       if (response.status==200) {
         dispatch({ type: 'SET_SUCCESS', payload: 'SignUp successful now verify phone' });
         navigate('/login'); // Redirect to login page after successful signup

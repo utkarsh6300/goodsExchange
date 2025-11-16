@@ -1,14 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import {
   Container, Typography, Grid, Card, CardContent, ImageList, ImageListItem, Select, MenuItem, TextField, InputAdornment
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import axios from 'axios';
+import { productService } from '../services';
 
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -20,27 +19,20 @@ function ProductsPage() {
 
 
   const navigate = useNavigate(); 
-  const { state, dispatch } = useAuth();
+  const {  dispatch } = useAuth();
 
  
   useEffect(() => {
     // Fetch products from your API
-    const config = {
-      headers: {
-        'token': localStorage.getItem('token'),
-        // ...formData.getHeaders(), // Include other headers from FormData
-      },
-    };
-    axios.get(`${api_url}/product/get-all`,config)
+    productService.getAllProducts()
       .then(response => {
         setProducts(response.data);
       })
       .catch(error => {
-        if(error.response.status==400)
-     { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-    }
+        if (error.response.status == 400) {
+          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+          return;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Error fetching products' });
         console.error('Error fetching products:', error);
       });

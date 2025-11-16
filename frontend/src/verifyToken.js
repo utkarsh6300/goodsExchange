@@ -1,22 +1,15 @@
-import axios from 'axios';
-import { api_url } from './constants/url';
+import api from "./services/api";
 
-const verifyToken = async(token) => {
-    // Implement your token verification logic here
-    // Return true if token is valid, false otherwise
-    try {
-        const config = {
-            headers: {
-              'token': token,
-            },
-          };
-        const response= await axios.get(`${api_url}/verify_token`,config);
-        if(response.status==200) return true;
-        else return false;
-    } catch (error) {
-        console.log(error);
-        return false;
-    }
-  };
+const verifyToken = async (token) => {
+  try {
+    // request interceptor already attaches token from localStorage,
+    // but pass token explicitly here to be explicit when needed
+    const response = await api.get("/verify_token", { headers: { token } });
+    return response.status === 200;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
 
-  export default verifyToken;
+export default verifyToken;
