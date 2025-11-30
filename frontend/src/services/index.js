@@ -3,3 +3,5 @@ export * as productService from "./productService";
 export * as userService from "./userService";
 export * as verifyService from "./verifyService";
 export { default as api, setLogoutHandler } from "./api";
+export { default as chatService } from "./chatService";
+export { default as socketService } from "./socketService";

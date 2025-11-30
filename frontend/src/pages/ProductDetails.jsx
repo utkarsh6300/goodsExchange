@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useParams } from 'react-router';
-import { productService } from '../services';
-import { userService } from '../services';
+import { productService, chatService } from '../services';
 import {
   Container,
   Typography,
@@ -13,6 +12,7 @@ import {
   ImageList,
   ImageListItem,
   Button,
+  Box,
 } from '@mui/material';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -20,31 +20,10 @@ import { useAuth } from '../contexts/AuthContext';
 const ProductDetails = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState({});
-  const [ownerPhoneNumber, setOwnerPhoneNumber] = useState('');
   const navigate = useNavigate();
 
-  const { dispatch } = useAuth();
-
-//  //slideshow logic
-//   const [activeSlide, setActiveSlide] = useState(0);
-
-//   useEffect(() => {
-//     const interval = setInterval(() => {
-//       setActiveSlide((prevSlide) => (prevSlide + 1) % product.imagesUrls.length);
-//     }, 3000);
-
-//     return () => clearInterval(interval);
-//   }, [product.imagesUrls]);
-
-//   const handleNextClick = () => {
-//     setActiveSlide((prevSlide) => (prevSlide + 1) % product.imagesUrls.length);
-//   };
-
-//   const handlePrevClick = () => {
-//     setActiveSlide((prevSlide) =>
-//       prevSlide === 0 ? product.imagesUrls.length - 1 : prevSlide - 1
-//     );
-//   };
+  const { dispatch, state } = useAuth();
+  const currentUserId = state.user?.id || localStorage.getItem('userId');
 
   useEffect(() => {
     // Fetch product details
@@ -53,37 +32,42 @@ const ProductDetails = () => {
         setProduct(response.data);
       })
       .catch(error => {
-        if (error.response.status == 400) {
+        if (error.response?.status == 400) {
           dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
           return;
         }
         dispatch({ type: 'SET_ERROR', payload: 'Error fetching product details' });
         console.error('Error fetching product details:', error);
       });
-  }, [productId]);
+  }, [productId, dispatch]);
 
-  const fetchOwnerPhoneNumber = () => {
-    // Fetch owner's phone number using owner's ID
-    userService.getPhoneNumber(product.owner)
-      .then(response => {
-        setOwnerPhoneNumber(response.data.phoneNumber);
-      })
-      .catch(error => {
-        if (error.response.status == 400) {
-          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-          return;
-        } else if (error.response.status == 401) {
-          dispatch({ type: 'SET_ERROR', payload: "needs to login" });
-          navigate("/login");
-          return;
-        } else if (error.response.status == 409) {
-          dispatch({ type: 'SET_ERROR', payload: "needs to verify number" });
-          navigate("/VerifyPhone");
-          return;
-        }
-        dispatch({ type: 'SET_ERROR', payload: 'Error fetching owner phone number' });
-        console.error('Error fetching owner phone number:', error);
-      });
+  const handleContactSeller = async () => {
+    // Check if user is logged in
+    if (!state.loggedIn) {
+      dispatch({ type: 'SET_ERROR', payload: 'Please login to contact seller' });
+      navigate("/login");
+      return;
+    }
+
+    // Prevent contacting yourself
+    if (product.owner && product.owner === currentUserId) {
+      dispatch({ type: 'SET_ERROR', payload: 'You cannot contact yourself' });
+      return;
+    }
+
+    try {
+      // Create or get existing conversation
+      const response = await chatService.createOrGetConversation(
+        product.owner,
+        productId
+      );
+      
+      // Navigate to chat page
+      navigate('/chat');
+    } catch (error) {
+      console.error('Error initiating chat:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to start conversation with seller' });
+    }
   };
 
   return (
@@ -97,6 +81,9 @@ const ProductDetails = () => {
         <Typography variant="body1">Subcategory: {product.subCategory}</Typography>
         <Typography variant="body1">Price: ₹ {product.price}</Typography>
         <Typography variant="body1">Quantity: {product.quantity}</Typography>
+        {product.address && (
+          <Typography variant="body1">Location: {product.address}</Typography>
+        )}
         <Typography variant="h6">Images:</Typography>
         {product.imagesUrls && product.imagesUrls.length > 0 ? (
           <ImageList cols={3} rowHeight={460} style={{ padding: '16px' }}>
@@ -109,39 +96,25 @@ const ProductDetails = () => {
         ) : (
           <Typography variant="body2" color="textSecondary">No images available</Typography>
         )}
-       
-
-      {/* <div className="slideshow-container">
-  {product.imagesUrls &&
-    product.imagesUrls.map((imageUrl, index) => (
-      <div
-        className={`slide ${index === activeSlide ? 'active' : ''}`}
-        key={index}
-      >
-        <img src={imageUrl} alt={`Image ${index}`} />
-      </div>
-    ))}
-  <button className="prev" onClick={handlePrevClick}>
-    &#10094;
-  </button>
-  <button className="next" onClick={handleNextClick}>
-    &#10095;
-  </button>
-</div> */}
-
 
         <Typography variant="body1" margin={8}>Description: {product.description}</Typography>
 
-
-      <Typography variant="h6">Do not misuse number,we will track of who accesed whom number and will give it to police if required. </Typography>
-      
-        {ownerPhoneNumber ? (
-          <Typography variant="body1">Owner&apos;s Phone Number: {ownerPhoneNumber}</Typography>
-        ) : (
-          <Button variant="contained" color="primary" onClick={fetchOwnerPhoneNumber}>
-            Get Owner&apos;s Phone Number
-          </Button>
-        )}
+        <Box sx={{ mt: 3, mb: 2 }}>
+          {product.owner && product.owner !== state.user?.id ? (
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={handleContactSeller}
+            >
+              Contact Seller
+            </Button>
+          ) : (
+            <Typography variant="body2" color="textSecondary">
+              This is your product
+            </Typography>
+          )}
+        </Box>
       </Paper>
     </Container>
   );

@@ -22,6 +22,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import EditIcon from '@mui/icons-material/Edit';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import LoginIcon from '@mui/icons-material/Login';
+import ChatIcon from '@mui/icons-material/Chat';
 import logo from '../assets/logo.png';
 
 function Navbar() {
@@ -48,6 +49,7 @@ function Navbar() {
   };
 
   const navLinks = [
+    { text: 'Messages', to: '/chat', icon: <ChatIcon />, auth: true },
     { text: 'Manage Products', to: '/manage-products', icon: <EditIcon />, auth: true },
     { text: 'Add Product', to: '/add-product', icon: <AddCircleOutlineIcon />, auth: true },
   ];

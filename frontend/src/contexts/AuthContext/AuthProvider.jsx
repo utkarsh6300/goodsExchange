@@ -13,6 +13,7 @@ function AuthProvider({ children }) {
   useEffect(() => {
     const handleLogout = () => {
       localStorage.removeItem('token');
+      localStorage.removeItem('userId');
       dispatch({ type: 'LOGOUT' });
     };
     setLogoutHandler(handleLogout);
@@ -23,14 +24,24 @@ function AuthProvider({ children }) {
     const token = localStorage.getItem('token');
     if (token) {
       // Verify token (you should implement token verification logic)
-      const isTokenValid = verifyToken(token);
-      if (isTokenValid) {
-        dispatch({ type: 'LOGIN' });
-      } else {
+      const run = async () => {
+        const isTokenValid = await verifyToken(token);
+        if (isTokenValid) {
+          // set logged in state and user if available
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+            dispatch({ type: 'SET_USER', payload: { id: userId } });
+          } else {
+            dispatch({ type: 'LOGIN' });
+          }
+        } else {
         // Remove invalid token and log out
         localStorage.removeItem('token');
+          localStorage.removeItem('userId');
         dispatch({ type: 'LOGOUT' });
       }
+      };
+      run();
     }
   }, []);
   

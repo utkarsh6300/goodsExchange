@@ -24,17 +24,20 @@ This file tracks the completion status of the new features.
 
 ### Backend
 
-- [ ] Install `socket.io`.
-- [ ] Integrate `socket.io` with the server.
-- [ ] Create `Conversation` and `Message` models.
-- [ ] Implement socket logic for joining rooms and sending messages.
-- [ ] Create API routes for chat.
+- [x] Install `socket.io`.
+- [x] Integrate `socket.io` with the server.
+- [x] Create `Conversation` and `Message` models.
+- [x] Implement socket logic for joining rooms and sending messages.
+- [x] Create API routes for chat.
 
 ### Frontend
 
-- [ ] Install `socket.io-client`.
-- [ ] Create `socketService`.
-- [ ] Create `ConversationList` and `ChatWindow` components.
-- [ ] Create `Chat` page.
-- [ ] Add "Contact Seller" button to `ProductDetails` page.
-- [ ] Create `chatService` for API calls.
+- [x] Install `socket.io-client`.
+- [x] Create `socketService`.
+- [x] Create `ConversationList` and `ChatWindow` components.
+- [x] Create `Chat` page.
+- [x] Add "Contact Seller" button to `ProductDetails` page.
+- [x] Create `chatService` for API calls.
+- [x] Add "Messages" link to Navbar.
+- [x] Remove phone number display feature and replace with chat-based contact.
+
