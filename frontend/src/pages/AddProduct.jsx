@@ -84,6 +84,21 @@ function AddProduct() {
       return;
     }
 
+    if (productData.price < 0) {
+      dispatch({ type: 'SET_ERROR', payload: 'Price cannot be negative.' });
+      return;
+    }
+
+    if (productData.quantity < 0) {
+      dispatch({ type: 'SET_ERROR', payload: 'Quantity cannot be negative.' });
+      return;
+    }
+
+    if (productData.images.length === 0) {
+      dispatch({ type: 'SET_ERROR', payload: 'At least one image is required.' });
+      return;
+    }
+
     // Create FormData for sending files
     const formData = new FormData();
     formData.append('name', productData.name);
