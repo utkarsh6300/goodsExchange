@@ -56,6 +56,8 @@ function Navbar() {
     ? { text: 'Logout', onClick: handleLogout, icon: <ExitToAppIcon /> }
     : { text: 'Login', to: '/login', icon: <LoginIcon /> };
 
+  const signupLink = { text: 'Sign Up', to: '/signup', icon: <AddCircleOutlineIcon /> };
+
   const drawerList = (
     <Box
       sx={{ width: 250 }}
@@ -69,6 +71,11 @@ function Navbar() {
             <ListItemText primary={link.text} />
           </ListItem>
         ))}
+        {!loggedIn && (
+          <ListItem button component={Link} to={signupLink.to}>
+            <ListItemText primary={signupLink.text} />
+          </ListItem>
+        )}
         <ListItem button onClick={authLink.onClick} component={authLink.to ? Link : 'button'} to={authLink.to}>
           <ListItemText primary={authLink.text} />
         </ListItem>
@@ -137,11 +144,16 @@ function Navbar() {
             </>
           ) : (
             <Box>
-              {navLinks.map((link) => (
+              {loggedIn && navLinks.map((link) => (
                 <IconButton color="inherit" component={Link} to={link.to} title={link.text} key={link.text}>
                   {link.icon}
                 </IconButton>
               ))}
+              {!loggedIn && (
+                 <IconButton color="inherit" component={Link} to={signupLink.to} title={signupLink.text}>
+                  {signupLink.icon}
+                </IconButton>
+              )}
               <IconButton color="inherit" onClick={authLink.onClick} component={authLink.to ? Link : 'button'} to={authLink.to} title={authLink.text}>
                 {authLink.icon}
               </IconButton>
@@ -149,22 +161,10 @@ function Navbar() {
           )}
         </Toolbar>
       </AppBar>
-      <Snackbar
-        open={!!error || !!success}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        {success ? (
-          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-            {success}
-          </Alert>
-        ) : (
-          error && (
-            <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
-              {error}
-            </Alert>
-          )
-        )}
+      <Snackbar open={!!error || !!success} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={success ? 'success' : 'error'} sx={{ width: '100%' }}>
+          {success || error}
+        </Alert>
       </Snackbar>
     </>
   );

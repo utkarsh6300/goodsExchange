@@ -1,6 +1,14 @@
-import { TextField, FormControl, InputLabel, Select, MenuItem, Button, Typography } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, Button, Typography, Box, CircularProgress } from '@mui/material';
 
-const ProductForm = ({ productData, handleChange, categories, handleLocation, coordinates }) => {
+const ProductForm = ({ 
+  productData, 
+  handleChange, 
+  categories, 
+  handleLocation, 
+  handleVerifyAddress,
+  coordinates,
+  verificationStatus
+}) => {
   return (
     <>
       <TextField
@@ -76,20 +84,44 @@ const ProductForm = ({ productData, handleChange, categories, handleLocation, co
       >
         Get My Location
       </Button>
+      
+      <Box mt={2}>
+        <TextField
+          label="Address"
+          variant="outlined"
+          fullWidth
+          name="address"
+          value={productData.address}
+          onChange={handleChange}
+          margin="normal"
+        />
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={handleVerifyAddress}
+          disabled={!productData.address || verificationStatus.loading}
+          style={{ marginTop: '0.5rem' }}
+        >
+          {verificationStatus.loading ? <CircularProgress size={24} /> : 'Verify Address'}
+        </Button>
+        {verificationStatus.message && (
+          <Typography 
+            variant="body2" 
+            style={{ 
+              marginTop: '0.5rem', 
+              color: verificationStatus.isError ? 'red' : 'green' 
+            }}
+          >
+            {verificationStatus.message}
+          </Typography>
+        )}
+      </Box>
+
       {coordinates && (
-        <Typography variant="body2" style={{ marginTop: '0.5rem' }}>
-          {`Latitude: ${coordinates[1]}, Longitude: ${coordinates[0]}`}
+        <Typography variant="body2" style={{ marginTop: '1rem', fontWeight: 'bold' }}>
+          {`Coordinates Set: Latitude: ${coordinates[1]}, Longitude: ${coordinates[0]}`}
         </Typography>
       )}
-      <TextField
-        label="Address"
-        variant="outlined"
-        fullWidth
-        name="address"
-        value={productData.address}
-        onChange={handleChange}
-        margin="normal"
-      />
     </>
   );
 };

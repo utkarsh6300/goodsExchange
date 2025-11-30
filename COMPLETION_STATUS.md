@@ -14,7 +14,9 @@ This file tracks the completion status of the new features.
 ### Frontend
 
 - [x] Update `ProductForm` component with "Get My Location" button and address input.
+- [x] Handle geolocation permission denial gracefully.
 - [x] Implement product filtering based on user's location.
+- [x] Add UI for selecting search radius.
 - [x] Update `productService` to handle location data.
 - [x] Display `address` on `ProductCard` component.
 

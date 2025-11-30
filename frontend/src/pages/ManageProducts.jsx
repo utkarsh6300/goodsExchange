@@ -10,6 +10,7 @@ import { productService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
 
 import ProductList from '../components/ProductList';
+import ProductFilterSidebar from '../components/ProductFilterSidebar';
 
 
 
@@ -136,21 +137,7 @@ function ManageProducts() {
 
       </Typography>
 
-      <ProductFilter
-
-        filterCategory={filterCategory}
-
-        handleFilterCategoryChange={handleFilterCategoryChange}
-
-        sortOption={sortOption}
-
-        handleSortOptionChange={handleSortOptionChange}
-
-        categories={categories}
-
-        showSearch={false}
-
-      />
+      <ProductFilterSidebar open={false} onClose={() => {}} />
 
       <ProductList products={sortedProducts} onProductClick={handleProductClick} />
 

@@ -24,6 +24,7 @@ const EditProduct = () => {
     address: ''
   });
   const [coordinates, setCoordinates] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState({ loading: false, message: '', isError: false });
   
   const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
@@ -45,7 +46,7 @@ const EditProduct = () => {
         dispatch({ type: 'SET_ERROR', payload: 'Error fetching product details' });
         console.error('Error fetching product details:', error);
       });
-  }, [productId]);
+  }, [productId, dispatch]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -60,6 +61,7 @@ const EditProduct = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setCoordinates([position.coords.longitude, position.coords.latitude]);
+          setVerificationStatus({ loading: false, message: 'Location fetched successfully!', isError: false });
         },
         (error) => {
           console.error(error);
@@ -71,60 +73,76 @@ const EditProduct = () => {
     }
   };
 
-const handleSubmit = (event) => {
-    event.preventDefault();
-  
-    const config = {
-      headers: {
-        'token': localStorage.getItem('token'),
-      },
-    };
-  
-    // If the "Delete-Product" button is clicked
-    if (event.nativeEvent.submitter.name === 'deleteButton') {
-      
-  
-      axios.get(`${api_url}/product/update-quantity/${productId}`, config)
-        .then(response => {
-          dispatch({ type: 'SET_SUCCESS', payload: 'Product deleted successfully' });
-          console.log('Product deleted successfully:', response.data);
-          // Redirect to a different page or perform additional actions if needed
-          navigate('/manage-products');
-        })
-        .catch(error => {
-          if(error.response.status==400)
-        { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-         }
-          dispatch({ type: 'SET_ERROR', payload: 'Error deleting product' });
-          console.error('Error deleting product:', error);
-        });
-    } else {
-      // If the "Save Product Details" button is clicked
-  
-      // Send product data to the API for updating
-      const updatedProductData = {
-        ...productData,
-        coordinates: JSON.stringify(coordinates),
-      };
-      axios.put(`${api_url}/product/update/${productId}`, updatedProductData, config)
-        .then(response => {
-          dispatch({ type: 'SET_SUCCESS', payload: 'Product updated successfully' });
-          console.log('Product updated successfully:', response.data);
-          navigate('/manage-products');
-        })
-        .catch(error => {
-          if(error.response.status==400)
-         { 
-            dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-            return;
-         }
-          dispatch({ type: 'SET_ERROR', payload: 'Error updating product' });
-          console.error('Error updating product:', error);
-        });
+  const handleVerifyAddress = async () => {
+    setVerificationStatus({ loading: true, message: '', isError: false });
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(productData.address)}`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setCoordinates([parseFloat(lon), parseFloat(lat)]);
+        setVerificationStatus({ loading: false, message: 'Address verified successfully!', isError: false });
+      } else {
+        setCoordinates(null);
+        setVerificationStatus({ loading: false, message: 'Address not found. Please try again.', isError: true });
+      }
+    } catch (error) {
+      console.error('Error verifying address:', error);
+      setCoordinates(null);
+      setVerificationStatus({ loading: false, message: 'Failed to verify address.', isError: true });
     }
   };
+
+  const handleSubmit = (event) => {
+      event.preventDefault();
+    
+      const config = {
+        headers: {
+          'token': localStorage.getItem('token'),
+        },
+      };
+    
+      // If the "Delete-Product" button is clicked
+      if (event.nativeEvent.submitter.name === 'deleteButton') {
+        axios.get(`${api_url}/product/update-quantity/${productId}`, config)
+          .then(response => {
+            dispatch({ type: 'SET_SUCCESS', payload: 'Product deleted successfully' });
+            navigate('/manage-products');
+          })
+          .catch(error => {
+            if(error.response && error.response.status === 400) {
+              dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+            } else {
+              dispatch({ type: 'SET_ERROR', payload: 'Error deleting product' });
+            }
+            console.error('Error deleting product:', error);
+          });
+      } else {
+        // If the "Save Product Details" button is clicked
+        if (!coordinates) {
+          dispatch({ type: 'SET_ERROR', payload: 'Please set a location for the product.' });
+          return;
+        }
+    
+        const updatedProductData = {
+          ...productData,
+          coordinates: JSON.stringify(coordinates),
+        };
+        axios.put(`${api_url}/product/update/${productId}`, updatedProductData, config)
+          .then(response => {
+            dispatch({ type: 'SET_SUCCESS', payload: 'Product updated successfully' });
+            navigate('/manage-products');
+          })
+          .catch(error => {
+            if(error.response && error.response.status === 400) {
+              dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+            } else {
+              dispatch({ type: 'SET_ERROR', payload: 'Error updating product' });
+            }
+            console.error('Error updating product:', error);
+          });
+      }
+    };
 
   return (
     <Container>
@@ -140,9 +158,11 @@ const handleSubmit = (event) => {
           handleChange={handleChange}
           categories={categories}
           handleLocation={handleLocation}
+          handleVerifyAddress={handleVerifyAddress}
           coordinates={coordinates}
+          verificationStatus={verificationStatus}
         />
-        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }}>
+        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }} disabled={!coordinates}>
          Save Product Details
         </Button>
         <Button type="submit" variant="contained" color="error" style={{ marginTop: '16px',marginLeft:'6px' }} name="deleteButton">

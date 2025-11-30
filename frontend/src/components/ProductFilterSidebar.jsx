@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, List, ListItem, ListItemText, Typography, Slider, TextField, Checkbox, FormControlLabel, Button } from '@mui/material';
+import { Drawer, List, ListItem, Typography, Slider, Button } from '@mui/material';
 
 const ProductFilterSidebar = ({ open, onClose, handleLocationSearch, setRadius, radius }) => {
   return (
@@ -25,31 +25,6 @@ const ProductFilterSidebar = ({ open, onClose, handleLocationSearch, setRadius, 
               max={100}
             />
             <Typography variant="body2">{radius} km</Typography>
-          </ListItem>
-          <ListItem>
-            <TextField label="Location" variant="outlined" fullWidth />
-          </ListItem>
-          <ListItem>
-            <Typography gutterBottom>Price Range</Typography>
-            <Slider
-              defaultValue={[0, 1000]}
-              aria-labelledby="range-slider"
-              valueLabelDisplay="auto"
-            />
-          </ListItem>
-          <ListItem>
-            <Typography gutterBottom>Category</Typography>
-            <FormControlLabel control={<Checkbox />} label="Electronics" />
-            <FormControlLabel control={<Checkbox />} label="Clothing" />
-            <FormControlLabel control={<Checkbox />} label="Home Goods" />
-          </ListItem>
-          <ListItem>
-            <Typography gutterBottom>Sort By</Typography>
-            <FormControlLabel control={<Checkbox />} label="Freshness" />
-            <FormControlLabel control={<Checkbox />} label="Time" />
-          </ListItem>
-          <ListItem>
-            <FormControlLabel control={<Checkbox />} label="In Stock" />
           </ListItem>
         </List>
       </div>

@@ -2,6 +2,16 @@
 
 GoodsExchange is a C2C (Customer to Customer) marketplace designed specifically for facilitating the exchange of raw materials within a village community. This platform aims to connect individuals or businesses within a local area, enabling them to trade raw materials efficiently and sustainably.
 
+## Features
+
+### Geolocation Support
+
+The application leverages the browser's Geolocation API to enhance the user experience by:
+
+-   **Local Product Discovery:** Allowing users to find products available in their vicinity.
+-   **Easy Product Listing:** Automatically capturing coordinates when listing a product, simplifying the process for sellers.
+-   **Promoting Local Trade:** Encouraging trade within the community by making it easier to connect with nearby buyers and sellers.
+
 ## Getting Started
 
 To contribute to GoodsExchange, follow the steps below:

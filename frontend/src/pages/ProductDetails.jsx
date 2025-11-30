@@ -98,13 +98,17 @@ const ProductDetails = () => {
         <Typography variant="body1">Price: ₹ {product.price}</Typography>
         <Typography variant="body1">Quantity: {product.quantity}</Typography>
         <Typography variant="h6">Images:</Typography>
-        <ImageList cols={3} rowHeight={460} style={{ padding: '16px' }} >
-          {product.imagesUrls && product.imagesUrls.map((imageUrl, index) => (
-            <ImageListItem key={index} style={{ maxWidth: '100%' }}>
-              <img src={imageUrl} alt={`Image ${index}`} style={{ maxWidth: '100%' }} />
-            </ImageListItem>
-          ))}
-        </ImageList>
+        {product.imagesUrls && product.imagesUrls.length > 0 ? (
+          <ImageList cols={3} rowHeight={460} style={{ padding: '16px' }}>
+            {product.imagesUrls.map((imageUrl, index) => (
+              <ImageListItem key={index} style={{ maxWidth: '100%' }}>
+                <img src={imageUrl} alt={`Image ${index}`} style={{ maxWidth: '100%' }} />
+              </ImageListItem>
+            ))}
+          </ImageList>
+        ) : (
+          <Typography variant="body2" color="textSecondary">No images available</Typography>
+        )}
        
 
       {/* <div className="slideshow-container">

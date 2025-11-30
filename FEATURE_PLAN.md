@@ -43,12 +43,15 @@ This feature will use the browser's Geolocation API to allow users to associate 
     *   **Action:**
         *   Replace the text input for location with a "Get My Location" button.
         *   On button click, use the browser's `navigator.geolocation.getCurrentPosition()` to get the user's latitude and longitude.
+        *   Implement error handling to gracefully manage scenarios where the user denies permission for geolocation.
         *   Include a text input for a user-friendly `address` (e.g., street, village name) which can be manually entered.
         *   The fetched coordinates and the manual address will be sent to the backend.
 
 2.  **Update Product Filtering:**
     *   **File:** `frontend/src/components/ProductFilterSidebar.jsx` (or `frontend/src/pages/Products.jsx`)
-    *   **Action:** Add a "Find Nearby Products" button or toggle. When activated, it will get the user's current location and query the backend for products within a default radius (e.g., 5km, 10km).
+    *   **Action:** 
+        *   Add a "Find Nearby Products" button or toggle. When activated, it will get the user's current location and query the backend for products within a selected radius.
+        *   Include a slider or dropdown to allow users to select a search radius (e.g., 5km, 10km, 25km).
 
 3.  **Update `productService`:**
     *   **File:** `frontend/src/services/productService.js`

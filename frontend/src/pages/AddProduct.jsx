@@ -16,9 +16,10 @@ function AddProduct() {
     address: '',
   });
   const [coordinates, setCoordinates] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState({ loading: false, message: '', isError: false });
   const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
-const { dispatch } = useAuth();
+  const { dispatch } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -43,6 +44,7 @@ const { dispatch } = useAuth();
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setCoordinates([position.coords.longitude, position.coords.latitude]);
+          setVerificationStatus({ loading: false, message: 'Location fetched successfully!', isError: false });
         },
         (error) => {
           console.error(error);
@@ -54,8 +56,33 @@ const { dispatch } = useAuth();
     }
   };
 
+  const handleVerifyAddress = async () => {
+    setVerificationStatus({ loading: true, message: '', isError: false });
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(productData.address)}`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setCoordinates([parseFloat(lon), parseFloat(lat)]);
+        setVerificationStatus({ loading: false, message: 'Address verified successfully!', isError: false });
+      } else {
+        setCoordinates(null);
+        setVerificationStatus({ loading: false, message: 'Address not found. Please try again.', isError: true });
+      }
+    } catch (error) {
+      console.error('Error verifying address:', error);
+      setCoordinates(null);
+      setVerificationStatus({ loading: false, message: 'Failed to verify address.', isError: true });
+    }
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    if (!coordinates) {
+      dispatch({ type: 'SET_ERROR', payload: 'Please set a location for the product.' });
+      return;
+    }
 
     // Create FormData for sending files
     const formData = new FormData();
@@ -88,13 +115,14 @@ const { dispatch } = useAuth();
           address: '',
         });
         setCoordinates(null);
+        setVerificationStatus({ loading: false, message: '', isError: false });
       })
       .catch(error => {
-        if(error.response.status==400)
-     { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-    }
+        if(error.response && error.response.status === 400)
+        { 
+          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+          return;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Error adding product' });
         console.error('Error adding product:', error);
       });
@@ -111,7 +139,9 @@ const { dispatch } = useAuth();
           handleChange={handleChange}
           categories={categories}
           handleLocation={handleLocation}
+          handleVerifyAddress={handleVerifyAddress}
           coordinates={coordinates}
+          verificationStatus={verificationStatus}
         />
         <input
           type="file"
@@ -133,7 +163,7 @@ const { dispatch } = useAuth();
             </ImageList>
           </Paper>
         )}
-        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }}>
+        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }} disabled={!coordinates}>
           Add Product
         </Button>
       </form>
