@@ -13,7 +13,9 @@ function AddProduct() {
     price: '',
     quantity: '',
     images: [],
+    address: '',
   });
+  const [coordinates, setCoordinates] = useState(null);
   const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
 const { dispatch } = useAuth();
@@ -36,6 +38,22 @@ const { dispatch } = useAuth();
     }
   };
 
+  const handleLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoordinates([position.coords.longitude, position.coords.latitude]);
+        },
+        (error) => {
+          console.error(error);
+          dispatch({ type: 'SET_ERROR', payload: 'Error getting location' });
+        }
+      );
+    } else {
+      dispatch({ type: 'SET_ERROR', payload: 'Geolocation is not supported by this browser.' });
+    }
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -47,6 +65,8 @@ const { dispatch } = useAuth();
     formData.append('subCategory', productData.subCategory);
     formData.append('price', productData.price);
     formData.append('quantity', productData.quantity);
+    formData.append('address', productData.address);
+    formData.append('coordinates', JSON.stringify(coordinates));
     productData.images.forEach(image => {
       formData.append('images', image);
     });
@@ -65,7 +85,9 @@ const { dispatch } = useAuth();
           price: '',
           quantity: '',
           images: [],
+          address: '',
         });
+        setCoordinates(null);
       })
       .catch(error => {
         if(error.response.status==400)
@@ -88,6 +110,8 @@ const { dispatch } = useAuth();
           productData={productData}
           handleChange={handleChange}
           categories={categories}
+          handleLocation={handleLocation}
+          coordinates={coordinates}
         />
         <input
           type="file"

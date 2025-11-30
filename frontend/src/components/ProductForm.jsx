@@ -1,6 +1,6 @@
-import { TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, Button, Typography } from '@mui/material';
 
-const ProductForm = ({ productData, handleChange, categories }) => {
+const ProductForm = ({ productData, handleChange, categories, handleLocation, coordinates }) => {
   return (
     <>
       <TextField
@@ -67,6 +67,28 @@ const ProductForm = ({ productData, handleChange, categories }) => {
         value={productData.quantity}
         onChange={handleChange}
         required
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleLocation}
+        style={{ marginTop: '1rem' }}
+      >
+        Get My Location
+      </Button>
+      {coordinates && (
+        <Typography variant="body2" style={{ marginTop: '0.5rem' }}>
+          {`Latitude: ${coordinates[1]}, Longitude: ${coordinates[0]}`}
+        </Typography>
+      )}
+      <TextField
+        label="Address"
+        variant="outlined"
+        fullWidth
+        name="address"
+        value={productData.address}
+        onChange={handleChange}
+        margin="normal"
       />
     </>
   );

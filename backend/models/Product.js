@@ -37,6 +37,20 @@ const ProductSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      index: '2dsphere'
+    }
+  },
+  address: {
+    type: String
+  }
 });
 
 module.exports = mongoose.model('Product', ProductSchema);

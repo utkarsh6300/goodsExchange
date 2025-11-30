@@ -20,8 +20,10 @@ const EditProduct = () => {
     category: '',
     subCategory: '',
     price: '',
-    quantity: ''
+    quantity: '',
+    address: ''
   });
+  const [coordinates, setCoordinates] = useState(null);
   
   const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
@@ -35,6 +37,9 @@ const EditProduct = () => {
     axios.get(`${api_url}/product/get/${productId}`, config)
       .then(response => {
         setProductData(response.data);
+        if (response.data.location) {
+          setCoordinates(response.data.location.coordinates);
+        }
       })
       .catch(error => {
         dispatch({ type: 'SET_ERROR', payload: 'Error fetching product details' });
@@ -48,6 +53,22 @@ const EditProduct = () => {
       ...prevData,
       [name]: value,
     }));
+  };
+
+  const handleLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoordinates([position.coords.longitude, position.coords.latitude]);
+        },
+        (error) => {
+          console.error(error);
+          dispatch({ type: 'SET_ERROR', payload: 'Error getting location' });
+        }
+      );
+    } else {
+      dispatch({ type: 'SET_ERROR', payload: 'Geolocation is not supported by this browser.' });
+    }
   };
 
 const handleSubmit = (event) => {
@@ -83,7 +104,11 @@ const handleSubmit = (event) => {
       // If the "Save Product Details" button is clicked
   
       // Send product data to the API for updating
-      axios.put(`${api_url}/product/update/${productId}`, productData, config)
+      const updatedProductData = {
+        ...productData,
+        coordinates: JSON.stringify(coordinates),
+      };
+      axios.put(`${api_url}/product/update/${productId}`, updatedProductData, config)
         .then(response => {
           dispatch({ type: 'SET_SUCCESS', payload: 'Product updated successfully' });
           console.log('Product updated successfully:', response.data);
@@ -114,6 +139,8 @@ const handleSubmit = (event) => {
           productData={productData}
           handleChange={handleChange}
           categories={categories}
+          handleLocation={handleLocation}
+          coordinates={coordinates}
         />
         <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }}>
          Save Product Details

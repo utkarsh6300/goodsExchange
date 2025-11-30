@@ -1,7 +1,7 @@
 import React from 'react';
-import { Drawer, List, ListItem, ListItemText, Typography, Slider, TextField, Checkbox, FormControlLabel } from '@mui/material';
+import { Drawer, List, ListItem, ListItemText, Typography, Slider, TextField, Checkbox, FormControlLabel, Button } from '@mui/material';
 
-const ProductFilterSidebar = ({ open, onClose }) => {
+const ProductFilterSidebar = ({ open, onClose, handleLocationSearch, setRadius, radius }) => {
   return (
     <Drawer anchor="left" open={open} onClose={onClose}>
       <div style={{ width: '250px', padding: '16px' }}>
@@ -9,6 +9,23 @@ const ProductFilterSidebar = ({ open, onClose }) => {
           Filters
         </Typography>
         <List>
+          <ListItem>
+            <Button variant="contained" color="primary" onClick={handleLocationSearch}>
+              Find Nearby Products
+            </Button>
+          </ListItem>
+          <ListItem>
+            <Typography gutterBottom>Radius (in km)</Typography>
+            <Slider
+              defaultValue={10}
+              aria-labelledby="range-slider"
+              valueLabelDisplay="auto"
+              onChange={(e, val) => setRadius(val)}
+              value={radius}
+              max={100}
+            />
+            <Typography variant="body2">{radius} km</Typography>
+          </ListItem>
           <ListItem>
             <TextField label="Location" variant="outlined" fullWidth />
           </ListItem>

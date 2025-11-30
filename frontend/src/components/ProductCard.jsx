@@ -80,6 +80,9 @@ const ProductCard = ({ product, onClick }) => {
         <Typography variant="body2" color="text.secondary">
           Quantity: {product.quantity}
         </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Address: {product.address}
+        </Typography>
       </CardContent>
     </Card>
   );

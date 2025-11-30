@@ -80,6 +80,13 @@ function ProductsPage() {
         All Products
       </Typography>
       <Button onClick={() => setIsFilterSidebarOpen(true)}>Filters</Button>
+      <ProductFilterSidebar 
+        open={isFilterSidebarOpen} 
+        onClose={() => setIsFilterSidebarOpen(false)}
+        handleLocationSearch={handleLocationSearch}
+        setRadius={setRadius}
+        radius={radius}
+      />
       <ProductFilterSidebar open={isFilterSidebarOpen} onClose={() => setIsFilterSidebarOpen(false)} />
       <ProductList products={sortedProducts} onProductClick={handleProductClick} />
     </Container>

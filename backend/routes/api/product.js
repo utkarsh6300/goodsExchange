@@ -41,7 +41,7 @@ router.post(
     }
 
     // Extract data from req body
-    const { name, description, category, subCategory, price, quantity } = req.body;
+    const { name, description, category, subCategory, price, quantity, address, coordinates } = req.body;
 
     try {
       const images = [];
@@ -72,6 +72,11 @@ router.post(
         quantity,
         imagesUrls:images,
         owner: req.user.id,
+        address: address,
+        location: {
+          type: 'Point',
+          coordinates: JSON.parse(coordinates)
+        }
       });
 
       // Save the product
@@ -104,7 +109,7 @@ router.put(
     }
 
     const productId = req.params.productId;
-    const { name, description, category, subCategory, price, quantity } = req.body;
+    const { name, description, category, subCategory, price, quantity, address, coordinates } = req.body;
 
     try {
       // Find the product by ID
@@ -126,6 +131,11 @@ router.put(
       product.subCategory = subCategory;
       product.price = price;
       product.quantity = quantity;
+      product.address = address;
+      product.location = {
+        type: 'Point',
+        coordinates: JSON.parse(coordinates)
+      };
       
       await product.save();
 
@@ -175,7 +185,7 @@ router.get(
 
 router.get('/get-all',async (req, res) => {
   try {
-    const { category, searchTerm, sortOption } = req.query;
+    const { category, searchTerm, sortOption, lat, lon, radius } = req.query;
     let filter = { quantity: { $gt: 0 } };
     let sort = {};
 
@@ -187,13 +197,25 @@ router.get('/get-all',async (req, res) => {
       filter.name = { $regex: searchTerm, $options: 'i' }; // Case-insensitive search
     }
 
+    if (lat && lon && radius) {
+      filter.location = {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [parseFloat(lon), parseFloat(lat)]
+          },
+          $maxDistance: parseInt(radius) * 1000 // radius in kilometers
+        }
+      };
+    }
+
     if (sortOption === 'price') {
       sort.price = 1; // Ascending order
     } else {
       sort.createdAt = -1; // Default to newest first
     }
 
-    const products = await Product.find(filter).sort(sort).limit(50);
+    const products = await Product.find(filter).sort(sort);
     res.json(products);
   } catch (err) {
     console.error(err);
