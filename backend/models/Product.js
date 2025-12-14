@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema({
   name: {
@@ -20,24 +20,42 @@ const ProductSchema = new mongoose.Schema({
     required: true,
   },
   quantity: {
-    type: String,
+    type: Number,
     required: true,
     default: 1,
   },
   // array of images urls
-  imagesUrls: [{
-    type: String,}
-   ],
+  imagesUrls: [
+    {
+      type: String,
+    },
+  ],
   owner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the User model
+    ref: "User", // Reference to the User model
     required: true,
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  address: {
+    type: String,
+    trim: true,
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number],
+    },
+  },
 });
 
-module.exports = mongoose.model('Product', ProductSchema);
+// Create a 2dsphere index on location.coordinates for geospatial queries
+ProductSchema.index({ "location.coordinates": "2dsphere" });
 
+module.exports = mongoose.model("Product", ProductSchema);

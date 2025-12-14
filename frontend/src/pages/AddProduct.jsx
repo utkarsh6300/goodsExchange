@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { Container, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button, Input, Paper, ImageList, ImageListItem } from '@mui/material';
-import axios from 'axios';
-
+import { useState } from 'react';
+import { Container, Typography, Button, Paper, ImageList, ImageListItem } from '@mui/material';
+import { productService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
+import ProductForm from '../components/ProductForm';
 
 function AddProduct() {
   const [productData, setProductData] = useState({
@@ -14,10 +13,13 @@ function AddProduct() {
     price: '',
     quantity: '',
     images: [],
+    address: '',
   });
+  const [coordinates, setCoordinates] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState({ loading: false, message: '', isError: false });
   const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
 
-const { state,dispatch } = useAuth();
+  const { dispatch } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -37,8 +39,65 @@ const { state,dispatch } = useAuth();
     }
   };
 
+  const handleLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoordinates([position.coords.longitude, position.coords.latitude]);
+          setVerificationStatus({ loading: false, message: 'Location fetched successfully!', isError: false });
+        },
+        (error) => {
+          console.error(error);
+          dispatch({ type: 'SET_ERROR', payload: 'Error getting location' });
+        }
+      );
+    } else {
+      dispatch({ type: 'SET_ERROR', payload: 'Geolocation is not supported by this browser.' });
+    }
+  };
+
+  const handleVerifyAddress = async () => {
+    setVerificationStatus({ loading: true, message: '', isError: false });
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(productData.address)}`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setCoordinates([parseFloat(lon), parseFloat(lat)]);
+        setVerificationStatus({ loading: false, message: 'Address verified successfully!', isError: false });
+      } else {
+        setCoordinates(null);
+        setVerificationStatus({ loading: false, message: 'Address not found. Please try again.', isError: true });
+      }
+    } catch (error) {
+      console.error('Error verifying address:', error);
+      setCoordinates(null);
+      setVerificationStatus({ loading: false, message: 'Failed to verify address.', isError: true });
+    }
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    if (!coordinates) {
+      dispatch({ type: 'SET_ERROR', payload: 'Please set a location for the product.' });
+      return;
+    }
+
+    if (productData.price < 0) {
+      dispatch({ type: 'SET_ERROR', payload: 'Price cannot be negative.' });
+      return;
+    }
+
+    if (productData.quantity < 0) {
+      dispatch({ type: 'SET_ERROR', payload: 'Quantity cannot be negative.' });
+      return;
+    }
+
+    if (productData.images.length === 0) {
+      dispatch({ type: 'SET_ERROR', payload: 'At least one image is required.' });
+      return;
+    }
 
     // Create FormData for sending files
     const formData = new FormData();
@@ -48,21 +107,17 @@ const { state,dispatch } = useAuth();
     formData.append('subCategory', productData.subCategory);
     formData.append('price', productData.price);
     formData.append('quantity', productData.quantity);
+    formData.append('address', productData.address);
+    formData.append('coordinates', JSON.stringify(coordinates));
     productData.images.forEach(image => {
       formData.append('images', image);
     });
 
-    const config = {
-      headers: {
-        'token': localStorage.getItem('token'),
-        // ...formData.getHeaders(), // Include other headers from FormData
-      },
-    };
     // Send product data to the API
-    axios.post(`${api_url}/product/save`, formData,config)
+    productService.saveProduct(formData)
       .then(response => {
         dispatch({ type: 'SET_SUCCESS', payload: 'Product added successfully' });
-        console.log('Product added successfully:', response.data);
+        // console.log('Product added successfully:', response.data);
         // Reset form fields after successful submission
         setProductData({
           name: '',
@@ -72,14 +127,17 @@ const { state,dispatch } = useAuth();
           price: '',
           quantity: '',
           images: [],
+          address: '',
         });
+        setCoordinates(null);
+        setVerificationStatus({ loading: false, message: '', isError: false });
       })
       .catch(error => {
-        if(error.response.status==400)
-     { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-    }
+        if(error.response && error.response.status === 400)
+        { 
+          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+          return;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Error adding product' });
         console.error('Error adding product:', error);
       });
@@ -91,75 +149,14 @@ const { state,dispatch } = useAuth();
         Add Product
       </Typography>
       <form onSubmit={handleSubmit}>
-
-        <TextField
-          label="Name of product"
-          variant="outlined"
-          fullWidth
-          name="name"
-          value={productData.name}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <TextField
-          label="Description"
-          variant="outlined"
-          name="description"
-          fullWidth
-          multiline   
-          rows={12}
-          value={productData.description}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Category*</InputLabel>
-          <Select
-            name="category"
-            value={productData.category}
-            onChange={handleChange}
-            required
-          >
-            <MenuItem value="Electronics">Electronics</MenuItem>
-            <MenuItem value="Clothing">Clothing</MenuItem>
-            {/* Add more categories */
-            categories.map((category) => (
-              <MenuItem key={category} value={category}>{category}</MenuItem>
-            ))
-            
-            }
-          </Select>
-        </FormControl>
-        <TextField
-          label="Subcategory"
-          variant="outlined"
-          fullWidth
-          name="subCategory"
-          value={productData.subCategory}
-          onChange={handleChange}
-          margin="normal"
-        />
-        <TextField
-          label="Price per unit In Rupees"
-          variant="outlined"
-          fullWidth
-          type="number"
-          name="price"
-          value={productData.price}
-          onChange={handleChange}
-          required
-          margin="normal"
-        />
-        <TextField
-          label="Quantity"
-          variant="outlined"
-          fullWidth
-          name="quantity"
-          value={productData.quantity}
-          onChange={handleChange}
-          required
+        <ProductForm
+          productData={productData}
+          handleChange={handleChange}
+          categories={categories}
+          handleLocation={handleLocation}
+          handleVerifyAddress={handleVerifyAddress}
+          coordinates={coordinates}
+          verificationStatus={verificationStatus}
         />
         <input
           type="file"
@@ -181,7 +178,7 @@ const { state,dispatch } = useAuth();
             </ImageList>
           </Paper>
         )}
-        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }}>
+        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }} disabled={!coordinates}>
           Add Product
         </Button>
       </form>

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { TextField, Button, Container, Typography } from '@mui/material';
-import axios from 'axios'; 
+import { authService } from '../services';
 
 import { useAuth } from '../contexts/AuthContext';
-import { api_url } from '../constants/url';
 
 function Login() {
   const { dispatch} = useAuth();
@@ -15,16 +14,19 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${api_url}/login`, {
-        phone,
-        password,
-      });
+      const response = await authService.login(phone, password);
 
-      if (response.status==200) {
+      if (response.status == 200) {
         
         //set token in local storage
         localStorage.setItem('token', response.data.token);
-        dispatch({ type: 'LOGIN' });
+        // store logged-in user's id for frontend features (chat)
+        if (response.data.id) {
+          localStorage.setItem('userId', response.data.id);
+          dispatch({ type: 'SET_USER', payload: { id: response.data.id } });
+        } else {
+          dispatch({ type: 'LOGIN' });
+        }
         dispatch({ type: 'SET_SUCCESS', payload: 'Login successful' });
         navigate('/');
       } else {
@@ -33,16 +35,15 @@ function Login() {
         console.log('Login failed.');
       }
     } catch (error) {
-      if (error.response.status==401) {
-        dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg});
+      if (error.response.status == 401) {
+        dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
         navigate('/VerifyPhone');
         return;
       }
-      if(error.response.status==400)
-     { 
-      dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-      return;
-    }
+      if (error.response.status == 400) {
+        dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+        return;
+      }
       dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
       // dispatch customised error message
       console.error('An error occurred:', error);

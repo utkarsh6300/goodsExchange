@@ -1,142 +1,178 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Snackbar, Alert, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemText, ListItemIcon } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Snackbar,
+  Alert,
+  useMediaQuery,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  InputBase,
+  Box,
+  alpha,
+} from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import MenuIcon from '@mui/icons-material/Menu';
-import logo from '../assets/goods-exchange-1.png';
+import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import EditIcon from '@mui/icons-material/Edit';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import LoginIcon from '@mui/icons-material/Login';
+import ChatIcon from '@mui/icons-material/Chat';
+import logo from '../assets/logo.png';
 
 function Navbar() {
   const navigate = useNavigate();
-  const navLinkStyle = {
-    color: 'white',
-    textDecoration: 'none',
-    marginRight: '16px',
-  };
-
-  const appBarStyle = {
-    marginBottom: '16px', // Adjust as needed
-  };
-
   const { dispatch, state } = useAuth();
   const { loggedIn, error, success } = state;
+  const isSmallScreen = useMediaQuery('(max-width:910px)');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleCloseSnackbar = () => {
     dispatch({ type: 'CLEAR_NOTIFICATIONS' });
   };
 
   const handleLogout = () => {
-    toggleDrawer(false);
+    toggleDrawer(false)();
     localStorage.removeItem('token');
     dispatch({ type: 'LOGOUT' });
     dispatch({ type: 'SET_SUCCESS', payload: 'Logged Out Successfully' });
     navigate('/login');
   };
 
-  // Use media query hook to check for smaller screens
-  const isSmallScreen = useMediaQuery('(max-width:910px)');
-
-  // State to control the drawer menu
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
   const toggleDrawer = (open) => () => {
     setDrawerOpen(open);
   };
 
+  const navLinks = [
+    { text: 'Messages', to: '/chat', icon: <ChatIcon />, auth: true },
+    { text: 'Manage Products', to: '/manage-products', icon: <EditIcon />, auth: true },
+    { text: 'Add Product', to: '/add-product', icon: <AddCircleOutlineIcon />, auth: true },
+  ];
+
+  const authLink = loggedIn
+    ? { text: 'Logout', onClick: handleLogout, icon: <ExitToAppIcon /> }
+    : { text: 'Login', to: '/login', icon: <LoginIcon /> };
+
+  const signupLink = { text: 'Sign Up', to: '/signup', icon: <AddCircleOutlineIcon /> };
+
+  const drawerList = (
+    <Box
+      sx={{ width: 250 }}
+      role="presentation"
+      onClick={toggleDrawer(false)}
+      onKeyDown={toggleDrawer(false)}
+    >
+      <List>
+        {navLinks.map((link) => (
+          <ListItem button component={Link} to={link.to} key={link.text}>
+            <ListItemText primary={link.text} />
+          </ListItem>
+        ))}
+        {!loggedIn && (
+          <ListItem button component={Link} to={signupLink.to}>
+            <ListItemText primary={signupLink.text} />
+          </ListItem>
+        )}
+        <ListItem button onClick={authLink.onClick} component={authLink.to ? Link : 'button'} to={authLink.to}>
+          <ListItemText primary={authLink.text} />
+        </ListItem>
+      </List>
+    </Box>
+  );
+
   return (
     <>
-      <AppBar position="static" style={appBarStyle}>
-        <Toolbar>
+      <AppBar position="static" sx={{ height: '64px' }}>
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Link to="/">
+              <img src={logo} alt="Goods Exchange" style={{ height: '50px', marginRight: '10px' }} />
+            </Link>
+          </Box>
+
+          {!isSmallScreen && (
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+              <Box
+                sx={{
+                  position: 'relative',
+                  borderRadius: '4px',
+                  backgroundColor: alpha('#fff', 0.15),
+                  '&:hover': {
+                    backgroundColor: alpha('#fff', 0.25),
+                  },
+                  width: '100%',
+                  maxWidth: '500px',
+                }}
+              >
+                <Box
+                  sx={{
+                    padding: '0 16px',
+                    height: '100%',
+                    position: 'absolute',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <SearchIcon />
+                </Box>
+                <InputBase
+                  placeholder="Search for products..."
+                  sx={{
+                    color: 'inherit',
+                    padding: '8px 8px 8px 48px',
+                    width: '100%',
+                  }}
+                  inputProps={{ 'aria-label': 'search' }}
+                />
+              </Box>
+            </Box>
+          )}
+
           {isSmallScreen ? (
             <>
               <IconButton color="inherit" onClick={toggleDrawer(true)}>
                 <MenuIcon />
               </IconButton>
               <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-                <List>
-                  <Link to="/" style={{ flexGrow: 1 }}>
-                   <img src={logo} alt="Goods Exchange" style={{height: '85px' }} />
-                  </Link>
-                  <ListItem  component={Link} to="/home" onClick={toggleDrawer(false)}>
-                    <ListItemText primary="Home" />
-                  </ListItem>
-                  <ListItem  component={Link} to="/products" onClick={toggleDrawer(false)}>
-                    <ListItemText primary="Products" />
-                  </ListItem>
-                  <ListItem  component={Link} to="/manage-products" onClick={toggleDrawer(false)}>
-                    <ListItemText primary="Manage Products" />
-                  </ListItem>
-                  <ListItem  component={Link} to="/add-product" onClick={toggleDrawer(false)}>
-                    <ListItemText primary="Add Product" />
-                  </ListItem>
-                  <ListItem  component={Link} to="/signup" onClick={toggleDrawer(false)}>
-                    <ListItemText primary="Sign Up" />
-                  </ListItem>
-                  { !loggedIn?   
-                  (<ListItem  component={Link} to="/login" onClick={toggleDrawer(false)}>
-                    <ListItemText primary="LogIn" />
-                  </ListItem>):
-                  (<ListItem  component={Link} to="/"  onClick={handleLogout}>
-                    <ListItemText  primary="LogOut" />
-                  </ListItem>)
-                   }
-                  
-                </List>
+                {drawerList}
               </Drawer>
             </>
           ) : (
-            <>
-           <Link to="/" style={{ flexGrow: 1 }}>
-             <img src={logo} alt="Goods Exchange" style={{marginBottom: '-4px',marginLeft:'-25px',height: '85px' }} />
-           </Link>
-            <Button color="inherit" component={Link} to="/" style={navLinkStyle}>
-            Home
-          </Button>
-          <Button color="inherit" component={Link} to="/products" style={navLinkStyle}>
-           Products
-          </Button>
-          <Button color="inherit" component={Link} to="/manage-products" style={navLinkStyle}>       
-                  Manage Products
-            </Button>
-            <Button color="inherit" component={Link} to="/add-product" style={navLinkStyle}>
-              Add Product
-            </Button>
-            <Button color="inherit" component={Link} to="/signup" style={navLinkStyle}>  
-                         Sign Up
-            </Button>
-            { !loggedIn?    (<Button color="inherit" component={Link} to="/login" style={navLinkStyle}>
-           Login
-           </Button>):
-            (<Button color="error" variant="contained" onClick={handleLogout}>
-           LogOut
-           </Button>)
-           }
-
-            </>
+            <Box>
+              {loggedIn && navLinks.map((link) => (
+                <IconButton color="inherit" component={Link} to={link.to} title={link.text} key={link.text}>
+                  {link.icon}
+                </IconButton>
+              ))}
+              {!loggedIn && (
+                 <IconButton color="inherit" component={Link} to={signupLink.to} title={signupLink.text}>
+                  {signupLink.icon}
+                </IconButton>
+              )}
+              <IconButton color="inherit" onClick={authLink.onClick} component={authLink.to ? Link : 'button'} to={authLink.to} title={authLink.text}>
+                {authLink.icon}
+              </IconButton>
+            </Box>
           )}
-         
-      
         </Toolbar>
       </AppBar>
-           <Snackbar
-         open={!!error || !!success}
-         autoHideDuration={6000}
-         onClose={handleCloseSnackbar}
-       >
-  {
-  success ?(<Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-     {success}
-   </Alert>) : error &&(<Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
-      {error}
-    </Alert>) 
-   }
-       </Snackbar>
+      <Snackbar open={!!error || !!success} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={success ? 'success' : 'error'} sx={{ width: '100%' }}>
+          {success || error}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
 
 export default Navbar;
-
 
 
 

@@ -9,6 +9,7 @@ import ManageProducts from './pages/ManageProducts';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import VerifyPhone from './pages/VerifyPhone';
+import Chat from './pages/Chat';
 import Navbar from './components/Navbar';
 import AddProduct from './pages/AddProduct';
 import ProductDetails from './pages/ProductDetails';
@@ -39,6 +40,10 @@ function App() {
           path="/add-product"
           element={state.loggedIn ? <AddProduct /> : <Navigate to="/login" />}
         />
+        <Route
+          path="/chat"
+          element={state.loggedIn ? <Chat /> : <Navigate to="/login" />}
+        />
         <Route path="/signup" element={<Signup />} />
         <Route
           path="/login"
@@ -56,3 +61,4 @@ function App() {
   );
 }
 export default App;
+
