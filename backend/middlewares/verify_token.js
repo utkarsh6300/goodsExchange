@@ -12,7 +12,7 @@ router.get("/", [], (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.jwtSecret);
-    console.log(decoded);
+    // console.log(decoded);
     return res.status(200).json({ msg: "Token is valid" });
   } catch (error) {
     console.error(error);

@@ -1,127 +1,109 @@
 
-import  { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Container, Typography, Grid, Card, CardContent, ImageList, ImageListItem, Select, MenuItem, TextField, InputAdornment
+  Container, Typography, Button
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import { productService } from '../services';
-
 import { useAuth } from '../contexts/AuthContext';
+import ProductList from '../components/ProductList';
+import ProductFilterSidebar from '../components/ProductFilterSidebar';
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
-  const [filterCategory, setFilterCategory] = useState('');
-  const [sortOption, setSortOption] = useState('time'); // Default sorting by time
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
+  const [radius, setRadius] = useState(10);
 
- const categories=[ "smartphones", "laptops", "fragrances", "skincare", "groceries", "home-decoration", "furniture", "tops", "womens-dresses", "womens-shoes", "mens-shirts", "mens-shoes", "mens-watches", "womens-watches", "womens-bags", "womens-jewellery", "sunglasses", "automotive", "motorcycle", "lighting","others" ];
+  const navigate = useNavigate();
+  const { dispatch } = useAuth();
 
-
-  const navigate = useNavigate(); 
-  const {  dispatch } = useAuth();
-
- 
   useEffect(() => {
-    // Fetch products from your API
-    productService.getAllProducts()
-      .then(response => {
-        setProducts(response.data);
-      })
-      .catch(error => {
-        if (error.response.status == 400) {
-          dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
-          return;
-        }
-        dispatch({ type: 'SET_ERROR', payload: 'Error fetching products' });
-        console.error('Error fetching products:', error);
-      });
-  }, []);
+    const fetchAllProducts = () => {
+      productService.getAllProducts()
+        .then(response => {
+          setProducts(response.data);
+        })
+        .catch(error => {
+          if (error.response && error.response.status === 400) {
+            dispatch({ type: 'SET_ERROR', payload: error.response.data.errors[0].msg });
+            return;
+          }
+          dispatch({ type: 'SET_ERROR', payload: 'Error fetching products' });
+          console.error('Error fetching products:', error);
+        });
+    };
 
-  const handleFilterCategoryChange = (event) => {
-    setFilterCategory(event.target.value);
-    setSearchTerm('');
-  };
+    const fetchInitialProducts = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            productService.getAllProducts(latitude, longitude, 10) // default radius 10km
+              .then(response => {
+                setProducts(response.data);
+              })
+              .catch(error => {
+                console.error('Error fetching nearby products, falling back to all products:', error);
+                fetchAllProducts(); // fallback
+              });
+          },
+          (err) => {
+            console.warn(`Geolocation error: ${err.message}. Fetching all products.`);
+            fetchAllProducts(); // fallback
+          }
+        );
+      } else {
+        console.warn('Geolocation not supported. Fetching all products.');
+        fetchAllProducts(); // fallback
+      }
+    };
 
-  const handleSortOptionChange = (event) => {
-    setSortOption(event.target.value);
-  };
+    fetchInitialProducts();
+  }, [dispatch]);
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const filteredProducts = products.filter(product => {
-    if (filterCategory === '' && searchTerm === '') {
-      return true;
+  const handleLocationSearch = () => {
+    if (!navigator.geolocation) {
+      dispatch({ type: 'SET_ERROR', payload: 'Geolocation is not supported by your browser.' });
+      return;
     }
 
-    const categoryMatch = product.category === filterCategory || filterCategory === '';
-    const searchTermMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        productService.getAllProducts(latitude, longitude, radius)
+          .then(response => {
+            setProducts(response.data);
+          })
+          .catch(error => {
+            dispatch({ type: 'SET_ERROR', payload: 'Error fetching nearby products' });
+            console.error('Error fetching nearby products:', error);
+          });
+      },
+      (err) => {
+        dispatch({ type: 'SET_ERROR', payload: 'Unable to retrieve your location.' });
+        console.error('Geolocation error:', err);
+      }
+    );
+  };
 
-    return categoryMatch && searchTermMatch;
-  });
-
-  const sortedProducts = filteredProducts.slice().sort((a, b) => {
-    if (sortOption === 'time') {
-      return b.createdAt.localeCompare(a.createdAt); // Sort by time (newest first)
-    } else if (sortOption === 'price') {
-      return a.price - b.price; // Sort by price (ascending)
-    }
-    return 0;
-  });
+  const handleProductClick = (productId) => {
+    navigate(`/product/${productId}`);
+  };
 
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
         All Products
       </Typography>
-      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Select value={filterCategory} onChange={handleFilterCategoryChange}>
-          <MenuItem value="">All Categories</MenuItem>
-          {categories.map(category => (
-            <MenuItem key={category} value={category}>{category}</MenuItem>
-          ))}
-        </Select>
-        <Select value={sortOption} onChange={handleSortOptionChange}>
-          <MenuItem value="time">Sort by Time</MenuItem>
-          <MenuItem value="price">Sort by Price</MenuItem>
-        </Select>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Search products"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </div>
-      <Grid container spacing={2}>
-        {sortedProducts.map(product => (
-          <Grid item xs={12} sm={6} key={product._id} onClick={() => navigate(`/product/${product._id}`)}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1">Product Name {product.name}</Typography>
-                <Typography variant="body1">RS. {product.price} only</Typography>
-                <Typography variant="body2">Quantity: {product.quantity}</Typography>
-              </CardContent>
-              <ImageList cols={2} rowHeight={160} style={{ padding: '16px' }}>
-                {product.imagesUrls.map((imageUrl, index) => (
-                  <ImageListItem key={index}>
-                    <img src={imageUrl} alt={`Product ${product._id} Image ${index}`} />
-                  </ImageListItem>
-                ))}
-              </ImageList>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      <Button onClick={() => setIsFilterSidebarOpen(true)}>Filters</Button>
+      <ProductFilterSidebar
+        open={isFilterSidebarOpen}
+        onClose={() => setIsFilterSidebarOpen(false)}
+        handleLocationSearch={handleLocationSearch}
+        setRadius={setRadius}
+        radius={radius}
+      />
+      <ProductList products={products} onProductClick={handleProductClick} />
     </Container>
   );
 }

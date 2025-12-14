@@ -4,8 +4,12 @@ export const saveProduct = (formData) => {
   return api.post("/product/save", formData);
 };
 
-export const getAllProducts = () => {
-  return api.get("/product/get-all");
+export const getAllProducts = (lat, lon, radius) => {
+  let url = "/product/get-all";
+  if (lat && lon && radius) {
+    url += `?lat=${lat}&lon=${lon}&radius=${radius}`;
+  }
+  return api.get(url);
 };
 
 export const getMyProducts = () => {

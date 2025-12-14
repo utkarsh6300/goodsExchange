@@ -20,7 +20,13 @@ function Login() {
         
         //set token in local storage
         localStorage.setItem('token', response.data.token);
-        dispatch({ type: 'LOGIN' });
+        // store logged-in user's id for frontend features (chat)
+        if (response.data.id) {
+          localStorage.setItem('userId', response.data.id);
+          dispatch({ type: 'SET_USER', payload: { id: response.data.id } });
+        } else {
+          dispatch({ type: 'LOGIN' });
+        }
         dispatch({ type: 'SET_SUCCESS', payload: 'Login successful' });
         navigate('/');
       } else {
