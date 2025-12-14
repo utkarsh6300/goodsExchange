@@ -20,8 +20,8 @@ const Chat = () => {
     socketService.connect(token);
 
     return () => {
-      // Optionally disconnect on unmount
-      // socketService.disconnect();
+      // It is best practice to disconnect when the component unmounts
+      socketService.disconnect();
     };
   }, [navigate]);
 
@@ -62,7 +62,8 @@ const Chat = () => {
         {/* Chat Window */}
         <Box sx={{
           display: 'flex',
-          order: { xs: 1, sm: 2 }
+          order: { xs: 1, sm: 2 },
+          overflow: 'hidden' // Prevents grid blowout
         }}>
           <ChatWindow conversation={selectedConversation} />
         </Box>

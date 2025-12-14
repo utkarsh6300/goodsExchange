@@ -15,12 +15,12 @@ class SocketService {
       return this.socket;
     }
 
-    console.log(
-      "SocketService.connect() -> connecting to",
-      socketUrl,
-      "token present?",
-      !!token
-    );
+    // console.log(
+    //   "SocketService.connect() -> connecting to",
+    //   socketUrl,
+    //   "token present?",
+    //   !!token
+    // );
     this.socket = io(socketUrl, {
       auth: {
         token,
@@ -84,7 +84,7 @@ class SocketService {
   onNewMessage(callback) {
     if (this.socket) {
       this.socket.on("newMessage", (msg) => {
-        console.log("SocketService received newMessage", msg);
+        // console.log("SocketService received newMessage", msg);
         callback(msg);
       });
     }

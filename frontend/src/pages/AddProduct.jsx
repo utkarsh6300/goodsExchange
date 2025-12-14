@@ -117,7 +117,7 @@ function AddProduct() {
     productService.saveProduct(formData)
       .then(response => {
         dispatch({ type: 'SET_SUCCESS', payload: 'Product added successfully' });
-        console.log('Product added successfully:', response.data);
+        // console.log('Product added successfully:', response.data);
         // Reset form fields after successful submission
         setProductData({
           name: '',

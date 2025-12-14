@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   TextField,
@@ -14,84 +14,115 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { chatService, socketService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
 
-// eslint-disable-next-line react/prop-types
 const ChatWindow = ({ conversation }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
   const { state } = useAuth();
 
-  const loadMessages = async () => {
-    try {
-      setLoading(true);
-      const response = await chatService.getMessages(conversation._id);
-      console.log('ChatWindow.loadMessages() response:', response.data?.length, 'messages for conversation', conversation._id);
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    } finally {
-      setLoading(false);
-    }
+  // 1. Resolve current user id (Safety check added)
+  const currentUserId = state.user?.id || state.user?._id || localStorage.getItem('userId');
+
+  // Helper: Scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Load messages when conversation changes
   useEffect(() => {
-    if (conversation) {
-      loadMessages();
-      socketService.joinRoom(conversation._id);
-      socketService.onNewMessage(handleNewMessage);
-      
-      return () => {
-        socketService.leaveRoom(conversation._id);
-        socketService.offNewMessage(handleNewMessage);
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation]);
+    scrollToBottom();
+  }, [messages]);
 
-  // resolve current user id (from auth state or fallback to localStorage)
-  const currentUserId = state.user?.id || localStorage.getItem('userId');
-
-  const handleNewMessage = (message) => {
-    console.log('ChatWindow.handleNewMessage():', message);
-    setMessages(prev => [...prev, message]);
+  // Helper: Check if message belongs to current user
+  const isCurrentUserMessage = (message) => {
+    const senderId = message.sender?._id || message.sender;
+    return String(senderId) === String(currentUserId);
   };
 
+  // Helper: safely get other participant
+  const getOtherParticipant = () => {
+    if (!conversation?.participants) return null;
+    return conversation.participants.find(
+      p => String(p._id) !== String(currentUserId)
+    );
+  };
+
+  const handleNewMessage = useCallback((message) => {
+    setMessages((prev) => {
+      // Prevent duplicates
+      if (prev.some(m => m._id === message._id)) return prev;
+      return [...prev, message];
+    });
+  }, []);
+
+  // Load messages and listeners
+  useEffect(() => {
+    if (!conversation?._id) return;
+
+    const initChat = async () => {
+      try {
+        setLoading(true);
+        const response = await chatService.getMessages(conversation._id);
+        setMessages(response.data);
+        socketService.joinRoom(conversation._id);
+      } catch (error) {
+        console.error('Error loading messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initChat();
+    socketService.onNewMessage(handleNewMessage);
+    
+    return () => {
+      socketService.leaveRoom(conversation._id);
+      socketService.offNewMessage(handleNewMessage);
+    };
+  }, [conversation, handleNewMessage]);
+
+  // --- FIXED SEND FUNCTION ---
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
     if (!newMessage.trim()) return;
 
-    const otherParticipant = conversation.participants.find(
-      p => p._id !== currentUserId
-    );
+    // Fix 1: Robustly find the recipient
+    const otherParticipant = getOtherParticipant();
+
+    // Fix 2: Safety Check - if we can't find who to send to, stop here.
+    if (!otherParticipant) {
+      console.error("Cannot send message: Recipient not found in participants list.");
+      return; 
+    }
 
     try {
       setSending(true);
+      
       const payload = {
         conversationId: conversation._id,
         sender: currentUserId,
-        receiver: otherParticipant._id,
+        receiver: otherParticipant._id, // This is where it was crashing
         text: newMessage
       };
-      console.log('ChatWindow.handleSendMessage() emitting payload:', payload);
-      socketService.sendMessage(payload.conversationId, payload.sender, payload.receiver, payload.text);
+
+      // Debug log to confirm data is correct before sending
+      // console.log('Sending payload:', payload);
+
+      socketService.sendMessage(
+        payload.conversationId, 
+        payload.sender, 
+        payload.receiver, 
+        payload.text
+      );
+      
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
       setSending(false);
     }
-  };
-
-  const getOtherParticipant = () => {
-    return conversation?.participants?.find(p => p._id !== currentUserId);
-  };
-
-  const isCurrentUserMessage = (message) => {
-    return message.sender._id === currentUserId;
   };
 
   if (!conversation) {
@@ -101,7 +132,9 @@ const ChatWindow = ({ conversation }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'textSecondary'
+        color: 'textSecondary',
+        height: '100%',
+        backgroundColor: '#f5f5f5'
       }}>
         <Typography>Select a conversation to start messaging</Typography>
       </Box>
@@ -116,7 +149,7 @@ const ChatWindow = ({ conversation }) => {
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: '#f5f5f5',
-      borderRadius: 1
+      height: '100%'
     }}>
       {/* Header */}
       <Box sx={{
@@ -134,7 +167,7 @@ const ChatWindow = ({ conversation }) => {
           {otherParticipant?.name?.charAt(0).toUpperCase()}
         </Avatar>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h6">{otherParticipant?.name}</Typography>
+          <Typography variant="h6">{otherParticipant?.name || 'Unknown User'}</Typography>
           {conversation.product && (
             <Typography variant="caption" color="textSecondary">
               About: {conversation.product.name}
@@ -166,7 +199,7 @@ const ChatWindow = ({ conversation }) => {
               const isCurrent = isCurrentUserMessage(message);
               return (
                 <Box
-                  key={message._id}
+                  key={message._id || Math.random()}
                   sx={{
                     display: 'flex',
                     justifyContent: isCurrent ? 'flex-end' : 'flex-start',
@@ -175,19 +208,25 @@ const ChatWindow = ({ conversation }) => {
                 >
                   <Paper
                     sx={{
-                      maxWidth: '60%',
+                      maxWidth: '70%',
                       p: 1.5,
                       backgroundColor: isCurrent ? '#1976d2' : 'white',
-                      color: isCurrent ? 'white' : 'inherit'
+                      color: isCurrent ? 'white' : 'text.primary',
+                      borderRadius: 2
                     }}
+                    elevation={1}
                   >
-                    <Typography variant="body2">{message.text}</Typography>
+                    <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
+                      {message.text}
+                    </Typography>
                     <Typography
                       variant="caption"
                       sx={{
                         display: 'block',
                         mt: 0.5,
-                        opacity: 0.7
+                        opacity: 0.8,
+                        textAlign: 'right',
+                        fontSize: '0.7rem'
                       }}
                     >
                       {new Date(message.timestamp).toLocaleTimeString([], {
@@ -231,6 +270,12 @@ const ChatWindow = ({ conversation }) => {
             onChange={(e) => setNewMessage(e.target.value)}
             disabled={sending}
             size="small"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+              }
+            }}
           />
           <Button
             type="submit"

@@ -71,7 +71,7 @@ io.on("connection", (socket) => {
 
     // Attach authenticated user info to socket for later use
     socket.user = decoded && decoded.user ? decoded.user : null;
-    console.log("Socket authenticated user:", socket.user && socket.user.id);
+    // console.log("Socket authenticated user:", socket.user && socket.user.id);
   } catch (err) {
     console.error("Unexpected error during socket authentication:", err);
   }
@@ -85,12 +85,12 @@ io.on("connection", (socket) => {
   // Handle incoming messages
   socket.on("sendMessage", async (data) => {
     try {
-      console.log(
-        "Socket sendMessage received raw data from",
-        socket.id,
-        ":",
-        data
-      );
+      // console.log(
+      //   "Socket sendMessage received raw data from",
+      //   socket.id,
+      //   ":",
+      //   data
+      // );
       const {
         conversationId,
         sender: payloadSender,
@@ -128,10 +128,10 @@ io.on("connection", (socket) => {
       // Populate sender and receiver for the emitted message
       await newMessage.populate("sender", "username name");
       await newMessage.populate("receiver", "username name");
-      console.log("Message populated sender/receiver:", {
-        sender: newMessage.sender,
-        receiver: newMessage.receiver,
-      });
+      // console.log("Message populated sender/receiver:", {
+      //   sender: newMessage.sender,
+      //   receiver: newMessage.receiver,
+      // });
 
       // Update conversation's last message and timestamp
       const Conversation = require("./models/Conversation");
