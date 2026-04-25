@@ -1,13 +1,27 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
-import { DeviceEventEmitter } from "react-native";
+import { DeviceEventEmitter, Platform } from "react-native";
 // @ts-ignore
-import { BASE_URL } from "@env";
+import { BASE_URL, ANDROID_EMULATOR_BASE_URL, DEV_BASE_URL } from "@env";
 
-console.log("API Base URL:", BASE_URL);
+const getBaseUrl = () => {
+  if (__DEV__) {
+    if (Platform.OS === "android") {
+      // Check if we are on emulator or physical device might be hard at runtime here, 
+      // but usually 10.0.2.2 works for emulators.
+      // If using physical device, DEV_BASE_URL (your local IP) is better.
+      return ANDROID_EMULATOR_BASE_URL || DEV_BASE_URL || BASE_URL;
+    }
+    return DEV_BASE_URL || BASE_URL;
+  }
+  return BASE_URL;
+};
+
+const finalBaseUrl = getBaseUrl();
+console.log("API Base URL used:", finalBaseUrl);
 
 const api = axios.create({
-  baseURL: BASE_URL || "https://goodsexchange.onrender.com/api",
+  baseURL: finalBaseUrl,
 });
 
 api.interceptors.request.use(async (config) => {

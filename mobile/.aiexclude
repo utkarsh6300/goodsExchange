@@ -1,0 +1,9 @@
+# Ignore all environment files
+*.env
+# Ignore a specific directory
+secret_configs/
+# Ignore all .pem files in any directory
+**/*.pem
+# Ignore setting env using powershell
+**/*.ps1
+./backend\set_env_variables.ps1
