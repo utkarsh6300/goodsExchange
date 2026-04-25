@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Goods Exchange",
+    "slug": "goods-exchange-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.goodsexchangemobile"
+    },
+    "android": {
+      "package": "com.anonymous.goodsexchangemobile"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "kotlinVersion": "1.9.24",
+            "ndkVersion": "27.1.12097423",
+            "packagingOptions": {
+              "jniLibs": {
+                "useLegacyPackaging": false
+              }
+            }
+          }
+        }
+      ],
+      "expo-image",
+      "expo-secure-store"
+    ],
+    "scheme": "goods-exchange"
+  }
+}
