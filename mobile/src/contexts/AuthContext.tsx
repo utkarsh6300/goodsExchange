@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import * as SecureStore from "expo-secure-store";
+import { DeviceEventEmitter } from "react-native";
 
 interface AuthContextType {
   userToken: string | null;
@@ -21,6 +22,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     };
     loadToken();
+
+    const subscription = DeviceEventEmitter.addListener("forceLogout", async () => {
+      await signOut();
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const signIn = async (token: string) => {

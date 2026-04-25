@@ -37,14 +37,14 @@ function RootLayoutNav() {
 
     const isPublicRoute = 
       tabName === "index" || 
-      tabName === "map" || 
+      tabName === "profile" || 
       segments[0] === "product" ||
       inAuthGroup ||
       segments.length === 0;
 
     if (!userToken && !isPublicRoute) {
       // Redirect to login if trying to access private routes (Chat, Sell, etc)
-      router.replace("/login");
+      router.push("/login");
     } else if (userToken && inAuthGroup) {
       // Redirect to home if authenticated and trying to access auth screens
       router.replace("/(tabs)");

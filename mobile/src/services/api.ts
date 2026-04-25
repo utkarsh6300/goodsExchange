@@ -1,12 +1,13 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import { DeviceEventEmitter } from "react-native";
+// @ts-ignore
+import { BASE_URL } from "@env";
 
-// Replace with your local machine's IP for device testing
-// const BASE_URL = "http://localhost:5000/api";
-const BASE_URL = "https://goodsexchange.onrender.com/api";
+console.log("API Base URL:", BASE_URL);
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: BASE_URL || "https://goodsexchange.onrender.com/api",
 });
 
 api.interceptors.request.use(async (config) => {
@@ -16,5 +17,16 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response && error.response.status === 401) {
+      await SecureStore.deleteItemAsync("userToken");
+      DeviceEventEmitter.emit("forceLogout");
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

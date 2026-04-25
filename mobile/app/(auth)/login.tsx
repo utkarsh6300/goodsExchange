@@ -1,63 +1,149 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator } from "react-native";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import api from "../../src/services/api";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { signIn } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
-    // In reality, call your /api/login backend
-    console.log("Logging in:", email);
-    // Dummy token
-    await signIn("dummy-token");
-    router.replace("/(tabs)");
+    if (!phone || !password) {
+      Alert.alert("Error", "Please enter both phone number and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("/login", {
+        phone,
+        password,
+      });
+
+      if (response.data.token) {
+        await signIn(response.data.token);
+        // After login, we usually want to go to the tabs. 
+        // If we came from a push(), replace it so user can't "back" into login.
+        router.replace("/(tabs)");
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.errors?.[0]?.msg || "Login failed";
+      Alert.alert("Login Error", msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Goods Exchange</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <Button title="Login" onPress={handleLogin} color="#28a745" />
-      
-      <View style={styles.guestContainer}>
-        <Button 
-          title="Browse as Guest" 
-          onPress={() => router.replace("/(tabs)")} 
-          color="#6c757d" 
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <TouchableOpacity 
+          style={styles.closeButton} 
+          onPress={handleClose}
+        >
+          <Ionicons name="close" size={28} color="#333" />
+        </TouchableOpacity>
+
+        <Text style={styles.title}>Goods Exchange</Text>
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Phone Number"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
         />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <TouchableOpacity 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Log In</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.link} onPress={() => router.push("/signup")}>
+          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: "center", backgroundColor: "#fff" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    justifyContent: "center", 
+    backgroundColor: "#fff",
+    position: "relative"
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 1,
+    padding: 10,
+  },
   title: { fontSize: 32, fontWeight: "bold", marginBottom: 40, textAlign: "center", color: "#28a745" },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 10,
+    padding: 15,
     marginBottom: 20,
-    borderRadius: 5,
+    borderRadius: 8,
+    fontSize: 16,
   },
-  guestContainer: {
+  button: {
+    backgroundColor: "#28a745",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonDisabled: {
+    backgroundColor: "#94d3a2",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  link: {
     marginTop: 20,
-  }
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#007bff",
+    fontSize: 16,
+  },
 });
