@@ -41,7 +41,6 @@ export default function ConversationListScreen() {
       <FlashList
         data={conversations}
         renderItem={renderItem}
-        estimatedItemSize={70}
         onRefresh={refetch}
         refreshing={isLoading}
         ListEmptyComponent={

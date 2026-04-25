@@ -60,7 +60,6 @@ export default function HomeScreen() {
       <FlashList
         data={products}
         renderItem={renderItem}
-        estimatedItemSize={200}
         numColumns={2}
         onRefresh={refetch}
         refreshing={isProdLoading}

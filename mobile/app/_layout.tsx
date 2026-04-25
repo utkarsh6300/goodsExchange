@@ -26,20 +26,15 @@ persistQueryClient({
 
 function RootLayoutNav() {
   const { userToken, isLoading } = useAuth();
-  const segments = useSegments();
+  const segments = useSegments() as string[];
   const router = useRouter();
 
   useEffect(() => {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
-    const inTabsGroup = segments[0] === "(tabs)";
     const tabName = segments[1];
 
-    // Align with Frontend Navigation:
-    // Public: Home (index), Map, Product Details (product/[id])
-    // Private: Chat (chat), Sell (add)
-    
     const isPublicRoute = 
       tabName === "index" || 
       tabName === "map" || 

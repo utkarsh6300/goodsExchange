@@ -11,6 +11,7 @@ interface LocationContextType {
   errorMsg: string | null;
   isLoading: boolean;
   refreshLocation: () => Promise<void>;
+  manualSetLocation: (addressStr: string) => Promise<boolean>;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -37,6 +38,41 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (e) {
       setAddress(`${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+    }
+  };
+
+  const manualSetLocation = async (addressStr: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const results = await Location.geocodeAsync(addressStr);
+      if (results.length > 0) {
+        const { latitude, longitude } = results[0];
+        const locObject = {
+          coords: {
+            latitude,
+            longitude,
+            altitude: null,
+            accuracy: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: Date.now(),
+        } as Location.LocationObject;
+
+        setLocation(locObject);
+        setAddress(addressStr); // Use the user's string as the displayed address
+        await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(locObject));
+        setErrorMsg(null);
+        setIsLoading(false);
+        return true;
+      }
+      setIsLoading(false);
+      return false;
+    } catch (e) {
+      console.error("manualSetLocation error:", e);
+      setIsLoading(false);
+      return false;
     }
   };
 
@@ -134,7 +170,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <LocationContext.Provider value={{ location, address, errorMsg, isLoading, refreshLocation }}>
+    <LocationContext.Provider value={{ location, address, errorMsg, isLoading, refreshLocation, manualSetLocation }}>
       {children}
     </LocationContext.Provider>
   );

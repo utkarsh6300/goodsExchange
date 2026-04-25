@@ -15,13 +15,13 @@ export default function HomeScreen() {
       onPress={() => router.push(`/product/${item._id}`)}
     >
       <Image
-        source={item.imageUrl || "https://via.placeholder.com/150"}
+        source={item.imagesUrls && item.imagesUrls.length > 0 ? item.imagesUrls[0] : "https://via.placeholder.com/150"}
         style={styles.image}
         contentFit="cover"
         transition={500}
       />
       <View style={styles.info}>
-        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.title}>{item.name}</Text>
         <Text style={styles.price}>{item.price ? `$${item.price}` : "Free"}</Text>
       </View>
     </TouchableOpacity>
@@ -32,7 +32,6 @@ export default function HomeScreen() {
       <FlashList
         data={products}
         renderItem={renderItem}
-        estimatedItemSize={200}
         numColumns={2}
         onRefresh={refetch}
         refreshing={isLoading}

@@ -4,9 +4,9 @@ module.exports = function (api) {
     presets: ["babel-preset-expo"],
     plugins: [
       "expo-router/babel",
-      "@babel/plugin-transform-private-methods",
-      "@babel/plugin-transform-class-properties",
-      "@babel/plugin-transform-private-property-in-object",
+      ["@babel/plugin-transform-class-properties", { "loose": true }],
+      ["@babel/plugin-transform-private-methods", { "loose": true }],
+      ["@babel/plugin-transform-private-property-in-object", { "loose": true }],
       "react-native-reanimated/plugin",
     ],
   };

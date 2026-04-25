@@ -15,7 +15,7 @@ export default function ChatScreen() {
   const queryClient = useQueryClient();
 
   // Mocking the current logged-in user
-  const currentUser = { _id: 1, name: "Me" };
+  const currentUser = { _id: "1", name: "Me" };
 
   // Find the receiver (the other participant)
   const receiverId = conversation?.participants.find(p => p._id !== currentUser._id)?._id;
