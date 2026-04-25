@@ -46,3 +46,4 @@ mobile/.expo
 .expo/**
 .expo-shared/
 mobile/.expo/README.md
+mobile/android

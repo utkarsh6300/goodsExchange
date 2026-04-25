@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
+import { LocationProvider } from "../src/contexts/LocationContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -35,27 +36,20 @@ function RootLayoutNav() {
     const inTabsGroup = segments[0] === "(tabs)";
     const tabName = segments[1];
 
-    // Handle root path
-    if (segments.length === 0) {
-      router.replace("/(tabs)");
-      return;
-    }
+    // Align with Frontend Navigation:
+    // Public: Home (index), Map, Product Details (product/[id])
+    // Private: Chat (chat), Sell (add)
+    
+    const isPublicRoute = 
+      tabName === "index" || 
+      tabName === "map" || 
+      segments[0] === "product" ||
+      inAuthGroup ||
+      segments.length === 0;
 
-    // Public tabs: index (Home), map
-    // Private tabs: add, chat
-    const isPublicTab = tabName === "index" || tabName === "map" || !tabName;
-
-    if (!userToken) {
-      // If not logged in and trying to access a private tab or other private routes
-      if (inTabsGroup && !isPublicTab) {
-        router.replace("/login");
-      } else if (!inTabsGroup && !inAuthGroup) {
-        // Any other route (like /chat/[id] or /product/[id]) also requires login for guest browsing
-        // Actually, web allows viewing products. Let's keep product details public too.
-        if (segments[0] === "chat") {
-          router.replace("/login");
-        }
-      }
+    if (!userToken && !isPublicRoute) {
+      // Redirect to login if trying to access private routes (Chat, Sell, etc)
+      router.replace("/login");
     } else if (userToken && inAuthGroup) {
       // Redirect to home if authenticated and trying to access auth screens
       router.replace("/(tabs)");
@@ -76,7 +70,9 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <RootLayoutNav />
+        <LocationProvider>
+          <RootLayoutNav />
+        </LocationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

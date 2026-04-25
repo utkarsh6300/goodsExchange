@@ -7,11 +7,14 @@ import { useProducts } from "../../src/hooks/useProducts";
 
 export default function MapScreen() {
   const router = useRouter();
-  const { location, getLocation } = useLocation();
+  const { location, getLocation, errorMsg, isLoading: isLocLoading } = useLocation();
   const [region, setRegion] = useState<Region | null>(null);
 
   useEffect(() => {
-    getLocation();
+    // Only call if we don't have a location yet
+    if (!location) {
+      getLocation();
+    }
   }, []);
 
   useEffect(() => {
@@ -25,16 +28,27 @@ export default function MapScreen() {
     }
   }, [location]);
 
-  const { data: products, isLoading } = useProducts(
+  const { data: products, isLoading: isProdLoading } = useProducts(
     region?.latitude,
     region?.longitude
   );
 
-  if (!region || (isLoading && !products)) {
+  if (errorMsg && !location) {
+    return (
+      <View style={styles.loader}>
+        <Text style={styles.errorText}>Location Error</Text>
+        <Text style={{ textAlign: "center", margin: 20 }}>{errorMsg}</Text>
+      </View>
+    );
+  }
+
+  if (!region || (isProdLoading && !products)) {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" color="#28a745" />
-        <Text style={{ marginTop: 10 }}>Loading Map & Products...</Text>
+        <Text style={{ marginTop: 10 }}>
+          {isLocLoading ? "Locating..." : "Loading Map & Products..."}
+        </Text>
       </View>
     );
   }
@@ -75,4 +89,9 @@ const styles = StyleSheet.create({
     height: Dimensions.get("window").height,
   },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#dc3545",
+  },
 });

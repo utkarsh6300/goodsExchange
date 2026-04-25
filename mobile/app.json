@@ -10,10 +10,20 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.goodsexchangemobile"
+      "bundleIdentifier": "com.anonymous.goodsexchangemobile",
+      "newArchEnabled": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow Goods Exchange to use your location to show products and local deals nearby."
+      }
     },
     "android": {
-      "package": "com.anonymous.goodsexchangemobile"
+      "package": "com.anonymous.goodsexchangemobile",
+      "newArchEnabled": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -24,7 +34,7 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
-            "kotlinVersion": "1.9.24",
+            "kotlinVersion": "2.1.21",
             "ndkVersion": "27.1.12097423",
             "packagingOptions": {
               "jniLibs": {
@@ -33,9 +43,7 @@
             }
           }
         }
-      ],
-      "expo-image",
-      "expo-secure-store"
+      ]
     ],
     "scheme": "goods-exchange"
   }
