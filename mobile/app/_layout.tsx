@@ -33,30 +33,36 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
-    const tabName = segments[1];
+    const inTabsGroup = segments[0] === "(tabs)";
+    const tabName = inTabsGroup ? segments[1] : null;
 
+    // Define which routes are accessible without a token
     const isPublicRoute = 
-      tabName === "index" || 
-      tabName === "profile" || 
-      segments[0] === "product" ||
-      inAuthGroup ||
-      segments.length === 0;
+      segments.length === 0 || // Root
+      (segments.length === 1 && segments[0] === "(tabs)") || // Initial tabs entry
+      tabName === "index" || // Home tab
+      tabName === "profile" || // Profile tab (public view or redirected internally)
+      tabName === "my-products" || // My products tab
+      segments[0] === "product" || // Product details
+      inAuthGroup; // Login/Signup
 
     if (!userToken && !isPublicRoute) {
-      // Redirect to login if trying to access private routes (Chat, Sell, etc)
-      router.push("/login");
+      // Trying to access private route (Chat, Sell) without token
+      console.log("[Navigation] Redirecting to login: Private route accessed without token.");
+      router.replace("/login");
     } else if (userToken && inAuthGroup) {
-      // Redirect to home if authenticated and trying to access auth screens
+      // Logged in user trying to access login/signup
+      console.log("[Navigation] Redirecting to home: Authenticated user tried to access auth group.");
       router.replace("/(tabs)");
     }
   }, [userToken, isLoading, segments]);
 
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="product/[id]" options={{ title: "Product Details" }} />
-      <Stack.Screen name="chat/[id]" options={{ title: "Chat" }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="product/[id]" options={{ headerShown: true, title: "Product Details" }} />
+      <Stack.Screen name="chat/[id]" options={{ headerShown: true, title: "Chat" }} />
     </Stack>
   );
 }

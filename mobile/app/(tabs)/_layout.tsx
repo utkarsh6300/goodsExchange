@@ -3,11 +3,27 @@ import { Ionicons } from "@expo/vector-icons";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useLocationContext } from "../../src/contexts/LocationContext";
 import { LocationPickerModal } from "../../src/components/LocationPickerModal";
+import { AddProductModal } from "../../src/components/AddProductModal";
 import { useState } from "react";
+import { useAuth } from "../../src/contexts/AuthContext";
+import { useRouter } from "expo-router";
 
 export default function TabLayout() {
   const { address } = useLocationContext();
-  const [modalVisible, setModalVisible] = useState(false);
+  const { userToken } = useAuth();
+  const router = useRouter();
+  const [locModalVisible, setLocModalVisible] = useState(false);
+  const [addModalVisible, setAddModalVisible] = useState(false);
+
+  const handleSellPress = (e: any) => {
+    if (!userToken) {
+      e.preventDefault();
+      router.push("/login");
+    } else {
+      e.preventDefault();
+      setAddModalVisible(true);
+    }
+  };
 
   return (
     <>
@@ -15,7 +31,7 @@ export default function TabLayout() {
         screenOptions={{ 
           tabBarActiveTintColor: "#28a745",
           headerLeft: () => (
-            <TouchableOpacity style={styles.headerLocation} onPress={() => setModalVisible(true)}>
+            <TouchableOpacity style={styles.headerLocation} onPress={() => setLocModalVisible(true)}>
               <Ionicons name="location" size={18} color="#28a745" />
               <Text style={styles.locationText} numberOfLines={1}>
                 {address || "Locating..."}
@@ -34,10 +50,10 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="add"
+          name="my-products"
           options={{
-            title: "Sell",
-            tabBarIcon: ({ color }) => <Ionicons name="add-circle" size={28} color={color} />,
+            title: "My Products",
+            tabBarIcon: ({ color }) => <Ionicons name="list" size={28} color={color} />,
           }}
         />
         <Tabs.Screen
@@ -55,9 +71,15 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
+      
       <LocationPickerModal 
-        visible={modalVisible} 
-        onClose={() => setModalVisible(false)} 
+        visible={locModalVisible} 
+        onClose={() => setLocModalVisible(false)} 
+      />
+
+      <AddProductModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
       />
     </>
   );

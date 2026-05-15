@@ -108,16 +108,19 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const refreshLocation = async () => {
     setIsLoading(true);
     setErrorMsg(null);
+    console.log("[LocationContext] Refreshing location...");
+    
     try {
-      if (Platform.OS === 'android' && !Device.isDevice) {
-        setErrorMsg(
-          'Location will not work reliably on Android Emulators. Try it on a real device!'
-        );
-        // We continue anyway as some emulators might support it or we can fallback to cache
+      const isRealDevice = Device.isDevice;
+      console.log(`[LocationContext] Device: ${Platform.OS}, isRealDevice: ${isRealDevice}`);
+
+      if (Platform.OS === 'android' && !isRealDevice) {
+        console.log("[LocationContext] Running on Android Emulator - Location might be simulated.");
       }
 
       // 1. Request permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
+      console.log(`[LocationContext] Permission status: ${status}`);
       if (status !== "granted") {
         setErrorMsg("Permission denied. Please allow location access in settings.");
         setIsLoading(false);
@@ -126,12 +129,15 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 
       // 2. Check if enabled
       let enabled = await Location.hasServicesEnabledAsync();
+      console.log(`[LocationContext] Services enabled: ${enabled}`);
       if (!enabled && Platform.OS === 'android') {
         try {
+          console.log("[LocationContext] Attempting to enable network provider...");
           await Location.enableNetworkProviderAsync();
           enabled = await Location.hasServicesEnabledAsync();
+          console.log(`[LocationContext] Services enabled after request: ${enabled}`);
         } catch (e) {
-          console.log("Network provider not enabled");
+          console.log("[LocationContext] Network provider request failed or was cancelled");
         }
       }
 
@@ -141,23 +147,37 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // 3. Get position - Try fresh position with a timeout
+      // 3. Get position
       let loc = null;
-      try {
-        loc = await Promise.race([
-          Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          }),
-          new Promise<null>((_, reject) => 
-            setTimeout(() => reject(new Error("Timeout getting location")), 10000)
-          )
-        ]);
-      } catch (err) {
-        console.warn("Location request timed out, trying last known position.");
+      
+      // On Emulators, getLastKnownPosition is often much faster and more reliable
+      if (!isRealDevice) {
+        console.log("[LocationContext] Emulator detected, trying last known position first...");
         loc = await Location.getLastKnownPositionAsync({});
+        if (loc) console.log("[LocationContext] Successfully got last known position from emulator.");
+      }
+
+      if (!loc) {
+        console.log("[LocationContext] Fetching fresh position (timeout: 10s)...");
+        try {
+          loc = await Promise.race([
+            Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            }),
+            new Promise<null>((_, reject) => 
+              setTimeout(() => reject(new Error("Timeout getting location")), 10000)
+            )
+          ]);
+          if (loc) console.log("[LocationContext] Successfully fetched fresh position.");
+        } catch (err) {
+          console.warn("[LocationContext] Location request timed out, trying last known position as fallback.");
+          loc = await Location.getLastKnownPositionAsync({});
+          if (loc) console.log("[LocationContext] Successfully got last known position fallback.");
+        }
       }
       
       if (loc && loc.coords) {
+        console.log(`[LocationContext] Position found: ${loc.coords.latitude}, ${loc.coords.longitude}`);
         const locObject = { 
           coords: loc.coords, 
           timestamp: loc.timestamp 
@@ -165,35 +185,59 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         
         setLocation(locObject);
         await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(locObject));
-        await resolveAddress(loc.coords.latitude, loc.coords.longitude);
+        const resolvedAddr = await resolveAddress(loc.coords.latitude, loc.coords.longitude);
+        console.log(`[LocationContext] Resolved address: ${resolvedAddr}`);
         setErrorMsg(null);
       } else {
+        console.warn("[LocationContext] No location found after all attempts.");
         const cached = await AsyncStorage.getItem(LOCATION_CACHE_KEY);
-        if (!cached) {
-          setErrorMsg("Could not retrieve location.");
+        if (cached) {
+          console.log("[LocationContext] Using cached location as final fallback.");
+          const parsed = JSON.parse(cached);
+          setLocation(parsed);
+          await resolveAddress(parsed.coords.latitude, parsed.coords.longitude);
+        } else if (!isRealDevice) {
+          // Provide a default for emulators so they don't get stuck
+          console.log("[LocationContext] Providing default location for emulator (San Francisco).");
+          const defaultLoc = {
+            coords: { latitude: 37.7749, longitude: -122.4194 },
+            timestamp: Date.now()
+          } as any;
+          setLocation(defaultLoc);
+          await resolveAddress(37.7749, -122.4194);
+        } else {
+          setErrorMsg("Could not retrieve location. Please ensure location services are enabled.");
         }
       }
     } catch (error: any) {
-      console.error("refreshLocation error:", error);
+      console.error("[LocationContext] refreshLocation error:", error);
       setErrorMsg("Error retrieving location.");
     } finally {
       setIsLoading(false);
+      console.log("[LocationContext] Refresh cycle complete.");
     }
   };
 
   useEffect(() => {
     const init = async () => {
+      console.log("[LocationContext] Initializing Location Context...");
       try {
+        // 1. Try to load cache for immediate display
         const cached = await AsyncStorage.getItem(LOCATION_CACHE_KEY);
         if (cached) {
+          console.log("[LocationContext] Found cached location. Loading for fast UI.");
           const parsed = JSON.parse(cached);
           setLocation(parsed);
-          await resolveAddress(parsed.coords.latitude, parsed.coords.longitude);
-          setIsLoading(false);
-        } else {
-          await refreshLocation();
+          // Resolve address in background
+          resolveAddress(parsed.coords.latitude, parsed.coords.longitude);
         }
+        
+        // 2. Always trigger a fresh refresh to get accurate "last" position
+        // This makes startup behave like the manual refresh button
+        await refreshLocation();
+        
       } catch (e) {
+        console.error("[LocationContext] Initialization error:", e);
         await refreshLocation();
       }
     };

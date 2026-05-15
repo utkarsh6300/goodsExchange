@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../services/api";
 
 export interface Product {
@@ -22,7 +22,7 @@ export interface Product {
 
 const fetchProducts = async (lat?: number, lon?: number): Promise<Product[]> => {
   const response = await api.get("/product/get-all", {
-    params: { lat, lon },
+    params: { lat, lon, radius: lat && lon ? 50 : undefined },
   });
   return response.data;
 };
@@ -42,5 +42,33 @@ export const useProducts = (lat?: number, lon?: number) => {
   return useQuery({
     queryKey: ["products", lat, lon],
     queryFn: () => fetchProducts(lat, lon),
+  });
+};
+
+export const useMyProducts = () => {
+  return useQuery({
+    queryKey: ["my-products"],
+    queryFn: async (): Promise<Product[]> => {
+      const response = await api.get("/product/my-products");
+      return response.data;
+    },
+  });
+};
+
+export const useSaveProduct = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await api.post("/product/save", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 };

@@ -3,7 +3,14 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 
 router.get("/", [], (req, res) => {
-  const token = req.header("token");
+  let token = req.header("Authorization");
+
+  if (token && token.startsWith("Bearer ")) {
+    token = token.split(" ")[1];
+  } else {
+    token = req.header("token");
+  }
+
   if (!token || token === "null") {
     return res
       .status(401)

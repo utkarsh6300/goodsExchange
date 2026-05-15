@@ -41,11 +41,8 @@ export default function LoginScreen() {
   };
 
   const handleClose = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/(tabs)");
-    }
+    // Always replace with tabs to break any loops and return to home
+    router.replace("/(tabs)");
   };
 
   return (

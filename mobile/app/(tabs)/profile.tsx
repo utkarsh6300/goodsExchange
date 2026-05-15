@@ -13,10 +13,8 @@ export default function ProfileScreen() {
   const { data: user, isLoading, error, refetch } = useQuery({
     queryKey: ["me", userToken],
     queryFn: async () => {
-      console.log("Fetching profile with token:", userToken);
       try {
         const response = await api.get("/user/me");
-        console.log("Profile data received:", response.data);
         return response.data;
       } catch (err: any) {
         console.error("Profile fetch error:", err.response?.data || err.message);
@@ -67,7 +65,10 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>My Activity</Text>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => router.push("/manage-products")}
+          >
             <Ionicons name="list" size={24} color="#333" />
             <Text style={styles.menuText}>My Products</Text>
             <Ionicons name="chevron-forward" size={20} color="#ccc" />
