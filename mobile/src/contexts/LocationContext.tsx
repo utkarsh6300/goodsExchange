@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import * as Location from "expo-location";
+import * as Device from "expo-device";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LOCATION_CACHE_KEY = "@user_location";
@@ -12,6 +13,7 @@ interface LocationContextType {
   isLoading: boolean;
   refreshLocation: () => Promise<void>;
   manualSetLocation: (addressStr: string) => Promise<boolean>;
+  manualSetCoords: (lat: number, lon: number) => Promise<void>;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -32,13 +34,40 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       if (response.length > 0) {
         const item = response[0];
         let addressStr = `${item.name || ""} ${item.city || ""} ${item.region || ""}`;
-        setAddress(addressStr.trim() || `${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+        const finalAddress = addressStr.trim() || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+        setAddress(finalAddress);
+        return finalAddress;
       } else {
-        setAddress(`${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+        const fallback = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+        setAddress(fallback);
+        return fallback;
       }
     } catch (e) {
-      setAddress(`${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+      const fallback = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+      setAddress(fallback);
+      return fallback;
     }
+  };
+
+  const manualSetCoords = async (lat: number, lon: number) => {
+    setIsLoading(true);
+    const locObject = {
+      coords: {
+        latitude: lat,
+        longitude: lon,
+        altitude: null,
+        accuracy: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    } as Location.LocationObject;
+
+    setLocation(locObject);
+    await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(locObject));
+    await resolveAddress(lat, lon);
+    setIsLoading(false);
   };
 
   const manualSetLocation = async (addressStr: string): Promise<boolean> => {
@@ -61,7 +90,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         } as Location.LocationObject;
 
         setLocation(locObject);
-        setAddress(addressStr); // Use the user's string as the displayed address
+        setAddress(addressStr);
         await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(locObject));
         setErrorMsg(null);
         setIsLoading(false);
@@ -80,6 +109,13 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
+      if (Platform.OS === 'android' && !Device.isDevice) {
+        setErrorMsg(
+          'Location will not work reliably on Android Emulators. Try it on a real device!'
+        );
+        // We continue anyway as some emulators might support it or we can fallback to cache
+      }
+
       // 1. Request permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -90,9 +126,8 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 
       // 2. Check if enabled
       let enabled = await Location.hasServicesEnabledAsync();
-      if (!enabled) {
+      if (!enabled && Platform.OS === 'android') {
         try {
-          // This only works on Android, will throw on iOS but that's okay
           await Location.enableNetworkProviderAsync();
           enabled = await Location.hasServicesEnabledAsync();
         } catch (e) {
@@ -106,23 +141,20 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // 3. Get position - Try last known first (much more reliable on emulators)
-      let loc = await Location.getLastKnownPositionAsync({});
-      
-      if (!loc) {
-        // Fallback to fresh position with a timeout
-        try {
-          loc = await Promise.race([
-            Location.getCurrentPositionAsync({
-              accuracy: Location.Accuracy.Balanced,
-            }),
-            new Promise<null>((_, reject) => 
-              setTimeout(() => reject(new Error("Timeout getting location")), 10000)
-            )
-          ]);
-        } catch (err) {
-          console.warn("Location request timed out, using fallback.");
-        }
+      // 3. Get position - Try fresh position with a timeout
+      let loc = null;
+      try {
+        loc = await Promise.race([
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }),
+          new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error("Timeout getting location")), 10000)
+          )
+        ]);
+      } catch (err) {
+        console.warn("Location request timed out, trying last known position.");
+        loc = await Location.getLastKnownPositionAsync({});
       }
       
       if (loc && loc.coords) {
@@ -136,10 +168,9 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         await resolveAddress(loc.coords.latitude, loc.coords.longitude);
         setErrorMsg(null);
       } else {
-        // If we still have no location and no cache, set an error
         const cached = await AsyncStorage.getItem(LOCATION_CACHE_KEY);
         if (!cached) {
-          setErrorMsg("Could not retrieve location. Try setting a location in your emulator settings.");
+          setErrorMsg("Could not retrieve location.");
         }
       }
     } catch (error: any) {
@@ -170,7 +201,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <LocationContext.Provider value={{ location, address, errorMsg, isLoading, refreshLocation, manualSetLocation }}>
+    <LocationContext.Provider value={{ location, address, errorMsg, isLoading, refreshLocation, manualSetLocation, manualSetCoords }}>
       {children}
     </LocationContext.Provider>
   );
