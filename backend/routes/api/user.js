@@ -7,6 +7,17 @@ const authMiddleware = require('../../middlewares/authMiddleware');
 
 const UserAccess = require('../../models/UserAccess');
 
+// Endpoint to get current user's profile
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 // Endpoint to get a user's phone number by ID
 router.get('/get-number/:userId', authMiddleware,async (req, res) => {
   const userId = req.params.userId;

@@ -200,14 +200,16 @@ router.get("/update-quantity/:productId", authMiddleware, async (req, res) => {
 
 router.get("/get-all", async (req, res) => {
   try {
-    const { lat, lon, radius } = req.query;
+    let { lat, lon, radius } = req.query;
     let filter = { quantity: { $gt: 0 } };
     
-    if (lat && lon && radius) {
+    if (lat && lon) {
+      // Use provided radius or default to 50km
+      const searchRadius = radius ? parseInt(radius) : 50;
       // Earth's radius in kilometers
       const earthRadiusKm = 6371;
       // Convert radius from km to radians
-      const radiusInRadians = parseInt(radius) / earthRadiusKm;
+      const radiusInRadians = searchRadius / earthRadiusKm;
       
       filter.location = {
         $geoWithin: {
