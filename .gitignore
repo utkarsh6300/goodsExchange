@@ -38,3 +38,12 @@ dist-ssr
 *.bak
 
 *.ps1
+
+.agents
+skills-lock.json
+mobile/.expo/**
+mobile/.expo
+.expo/**
+.expo-shared/
+mobile/.expo/README.md
+mobile/android

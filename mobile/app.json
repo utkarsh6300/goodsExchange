@@ -1,0 +1,80 @@
+{
+  "expo": {
+    "name": "Goods Exchange",
+    "slug": "goods-exchange-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.goodsexchangemobile",
+      "newArchEnabled": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow Goods Exchange to use your location to show products and local deals nearby."
+      }
+    },
+    "android": {
+      "package": "com.anonymous.goodsexchangemobile",
+      "newArchEnabled": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "kotlinVersion": "2.1.21",
+            "ndkVersion": "27.1.12097423",
+            "packagingOptions": {
+              "jniLibs": {
+                "useLegacyPackaging": false
+              }
+            }
+          }
+        }
+      ]
+    ],
+    "scheme": "goods-exchange",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "260a7e0a-3879-4383-b837-ece2bed8dbcc"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/260a7e0a-3879-4383-b837-ece2bed8dbcc"
+    }
+  }
+}

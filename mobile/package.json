@@ -1,0 +1,66 @@
+{
+  "name": "goods-exchange-mobile",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-masked-view/masked-view": "0.3.2",
+    "@react-navigation/native": "7.1.8",
+    "@shopify/flash-list": "2.0.2",
+    "@tanstack/query-async-storage-persister": "5.100.1",
+    "@tanstack/react-query": "5.100.1",
+    "@tanstack/react-query-persist-client": "5.100.1",
+    "@types/react": "19.1.10",
+    "axios": "1.15.2",
+    "expo": "54.0.34",
+    "expo-build-properties": "1.0.10",
+    "expo-constants": "18.0.13",
+    "expo-device": "8.0.10",
+    "expo-haptics": "15.0.8",
+    "expo-image": "3.0.11",
+    "expo-image-picker": "17.0.11",
+    "expo-linking": "8.0.12",
+    "expo-location": "19.0.8",
+    "expo-router": "6.0.23",
+    "expo-secure-store": "15.0.8",
+    "expo-status-bar": "3.0.9",
+    "expo-updates": "~29.0.17",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-dotenv": "3.4.11",
+    "react-native-gifted-chat": "2.4.0",
+    "react-native-keyboard-controller": "1.18.5",
+    "react-native-maps": "1.20.1",
+    "react-native-reanimated": "4.1.1",
+    "react-native-safe-area-context": "5.6.2",
+    "react-native-screens": "4.16.0",
+    "react-native-worklets": "0.5.1",
+    "scheduler": "0.27.0",
+    "socket.io-client": "4.7.2",
+    "typescript": "5.9.2"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-class-properties": "7.28.6",
+    "@babel/plugin-transform-private-methods": "7.28.6",
+    "@babel/plugin-transform-private-property-in-object": "7.28.6"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "use-memo-one": {
+      "react": "$react"
+    },
+    "postcss": "8.5.10",
+    "uuid": "9.0.0",
+    "rimraf": "5.0.10",
+    "glob": "13.0.6",
+    "picomatch": "4.0.4"
+  }
+}

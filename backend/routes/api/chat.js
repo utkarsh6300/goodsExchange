@@ -55,6 +55,27 @@ router.get(
   }
 );
 
+// Get a single conversation by ID
+router.get("/conversations/:conversationId", auth, async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user.id;
+
+    const conversation = await Conversation.findById(conversationId)
+      .populate("participants", "username name")
+      .populate("product", "name imagesUrls price");
+
+    if (!conversation || !conversation.participants.some(p => p._id.toString() === userId)) {
+      return res.status(404).json({ error: "Conversation not found" });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error("Error fetching conversation:", error);
+    res.status(500).json({ error: "Failed to fetch conversation" });
+  }
+});
+
 // Create or get existing conversation between two users
 router.post("/conversations", auth, async (req, res) => {
   try {
