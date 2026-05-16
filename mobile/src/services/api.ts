@@ -1,18 +1,18 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { DeviceEventEmitter, Platform } from "react-native";
+import Constants from "expo-constants";
+
 // @ts-ignore
-import { BASE_URL, ANDROID_EMULATOR_BASE_URL, DEV_BASE_URL } from "@env";
+import { ANDROID_EMULATOR_BASE_URL } from "@env";
+
+const BASE_URL = Constants.expoConfig?.extra?.BASE_URL;
 
 const getBaseUrl = () => {
   if (__DEV__) {
     if (Platform.OS === "android") {
-      // Check if we are on emulator or physical device might be hard at runtime here, 
-      // but usually 10.0.2.2 works for emulators.
-      // If using physical device, DEV_BASE_URL (your local IP) is better.
-      return ANDROID_EMULATOR_BASE_URL || DEV_BASE_URL || BASE_URL;
+      return ANDROID_EMULATOR_BASE_URL || BASE_URL;
     }
-    return DEV_BASE_URL || BASE_URL;
   }
   return BASE_URL;
 };

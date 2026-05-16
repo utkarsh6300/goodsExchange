@@ -41,7 +41,7 @@ export default function ConversationListScreen() {
       <FlashList
         data={conversations}
         renderItem={renderItem}
-        onRefresh={refetch}
+        onRefresh={() => refetch()}
         refreshing={isLoading}
         ListEmptyComponent={
           <Text style={styles.empty}>No conversations yet.</Text>

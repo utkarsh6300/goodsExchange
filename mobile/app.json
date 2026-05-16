@@ -22,11 +22,18 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "FOREGROUND_SERVICE"
+        "FOREGROUND_SERVICE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "config": {
         "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+          "apiKey": ""
         }
       }
     },
@@ -56,6 +63,18 @@
         }
       ]
     ],
-    "scheme": "goods-exchange"
+    "scheme": "goods-exchange",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "260a7e0a-3879-4383-b837-ece2bed8dbcc"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/260a7e0a-3879-4383-b837-ece2bed8dbcc"
+    }
   }
 }

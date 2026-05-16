@@ -1,37 +1,90 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import { useMyProducts, Product } from "../../src/hooks/useProducts";
+import { useMyProducts, Product, useUpdateQuantity } from "../../src/hooks/useProducts";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { AddProductModal } from "../../src/components/AddProductModal";
+import { useAuth } from "../../src/contexts/AuthContext";
 
 export default function MyProductsScreen() {
   const router = useRouter();
+  const { userToken, isLoading: authLoading } = useAuth();
   const { data: products, isLoading, refetch } = useMyProducts();
+  const updateQuantity = useUpdateQuantity();
+  
   const [addModalVisible, setAddProductVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const renderItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => router.push(`/product/${item._id}`)}
-    >
-      <Image
-        source={item.imagesUrls && item.imagesUrls.length > 0 ? item.imagesUrls[0] : "https://via.placeholder.com/150"}
-        style={styles.image}
-        contentFit="cover"
-        transition={500}
-      />
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setAddProductVisible(true);
+  };
+
+  const handleMarkAsSold = (id: string) => {
+    updateQuantity.mutate(id);
+  };
+
+  const renderItem: ListRenderItem<Product> = ({ item }) => (
+    <View style={styles.card}>
+      <TouchableOpacity
+        onPress={() => router.push(`/product/${item._id}`)}
+      >
+        <Image
+          source={item.imagesUrls && item.imagesUrls.length > 0 ? item.imagesUrls[0] : "https://via.placeholder.com/150"}
+          style={styles.image}
+          contentFit="cover"
+          transition={500}
+        />
+      </TouchableOpacity>
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
         <Text style={styles.price}>{item.price ? `$${item.price}` : "Free"}</Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>{item.quantity > 0 ? "Active" : "Sold"}</Text>
+        
+        <View style={styles.actionRow}>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.editButton]}
+            onPress={() => handleEdit(item)}
+          >
+            <Ionicons name="create-outline" size={18} color="#28a745" />
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.soldButton]}
+            onPress={() => handleMarkAsSold(item._id)}
+          >
+            <Ionicons name="checkmark-done" size={18} color="#666" />
+            <Text style={styles.soldButtonText}>Sold</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
+
+  if (authLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#28a745" />
+      </View>
+    );
+  }
+
+  if (!userToken) {
+    return (
+      <View style={styles.centered}>
+        <Ionicons name="lock-closed-outline" size={80} color="#ccc" />
+        <Text style={styles.loginText}>Please login to see your products.</Text>
+        <TouchableOpacity 
+          style={styles.listButton}
+          onPress={() => router.push("/login")}
+        >
+          <Text style={styles.listButtonText}>Go to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (isLoading && !products) {
     return (
@@ -47,28 +100,33 @@ export default function MyProductsScreen() {
         <Text style={styles.headerTitle}>My Products</Text>
         <TouchableOpacity 
           style={styles.addButton}
-          onPress={() => setAddProductVisible(true)}
+          onPress={() => {
+            setSelectedProduct(null);
+            setAddProductVisible(true);
+          }}
         >
           <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      <FlashList
+      <FlashList<Product>
         data={products}
         renderItem={renderItem}
         numColumns={2}
-        onRefresh={refetch}
+        onRefresh={() => refetch()}
         refreshing={isLoading}
-        estimatedItemSize={200}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="basket-outline" size={80} color="#ccc" />
             <Text style={styles.emptyText}>You haven't listed any products yet.</Text>
             <TouchableOpacity 
               style={styles.listButton}
-              onPress={() => setAddProductVisible(true)}
+              onPress={() => {
+                setSelectedProduct(null);
+                setAddProductVisible(true);
+              }}
             >
-              <Text style={styles.listButtonText}>List Your First Item</Text>
+              <Text style={styles.listButtonText}>Add Your First Item</Text>
             </TouchableOpacity>
           </View>
         }
@@ -76,8 +134,10 @@ export default function MyProductsScreen() {
 
       <AddProductModal 
         visible={addModalVisible} 
+        product={selectedProduct}
         onClose={() => {
           setAddProductVisible(false);
+          setSelectedProduct(null);
           refetch();
         }} 
       />
@@ -87,7 +147,7 @@ export default function MyProductsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -121,15 +181,42 @@ const styles = StyleSheet.create({
   info: { padding: 10 },
   title: { fontSize: 15, fontWeight: "bold", color: "#333" },
   price: { fontSize: 14, color: "#28a745", marginTop: 4, fontWeight: "600" },
-  statusBadge: {
-    marginTop: 8,
-    backgroundColor: "#e9ecef",
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    alignSelf: "flex-start",
+  actionRow: {
+    flexDirection: "row",
+    marginTop: 10,
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    paddingTop: 10,
   },
-  statusText: { fontSize: 11, color: "#666", fontWeight: "500" },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  editButton: {
+  },
+  editButtonText: {
+    fontSize: 12,
+    color: "#28a745",
+    marginLeft: 4,
+    fontWeight: "600",
+  },
+  soldButton: {
+  },
+  soldButtonText: {
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 4,
+    fontWeight: "600",
+  },
+  loginText: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 20,
+    marginBottom: 30,
+    textAlign: "center",
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",

@@ -61,7 +61,7 @@ export default function HomeScreen() {
         data={products}
         renderItem={renderItem}
         numColumns={2}
-        onRefresh={refetch}
+        onRefresh={() => refetch()}
         refreshing={isProdLoading}
         ListEmptyComponent={
           !isProdLoading ? <Text style={styles.empty}>No products found nearby.</Text> : null

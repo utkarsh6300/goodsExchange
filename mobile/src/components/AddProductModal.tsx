@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   View,
@@ -15,17 +15,19 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
-import { useSaveProduct } from "../hooks/useProducts";
+import { useSaveProduct, useUpdateProduct, Product } from "../hooks/useProducts";
 import { useLocationContext } from "../contexts/LocationContext";
 
 interface AddProductModalProps {
   visible: boolean;
   onClose: () => void;
+  product?: Product | null;
 }
 
-export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
+export const AddProductModal = ({ visible, onClose, product }: AddProductModalProps) => {
   const { location, address } = useLocationContext();
   const saveProduct = useSaveProduct();
+  const updateProduct = useUpdateProduct();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -34,6 +36,19 @@ export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
   const [quantity, setQuantity] = useState("1");
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      setName(product.name);
+      setDescription(product.description || "");
+      setPrice(product.price.toString());
+      setCategory(product.category);
+      setQuantity(product.quantity.toString());
+      setImages(product.imagesUrls);
+    } else if (visible) {
+      resetForm();
+    }
+  }, [product, visible]);
 
   const resetForm = () => {
     setName("");
@@ -46,11 +61,15 @@ export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
   };
 
   const handleClose = () => {
-    resetForm();
+    if (!product) {
+      resetForm();
+    }
     onClose();
   };
 
   const pickImage = async () => {
+    if (product) return;
+    
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert("Permission Denied", "We need access to your photos to upload images.");
@@ -70,6 +89,7 @@ export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
   };
 
   const removeImage = (index: number) => {
+    if (product) return;
     setImages(images.filter((_, i) => i !== index));
   };
 
@@ -79,49 +99,65 @@ export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
       return;
     }
 
-    if (images.length === 0) {
+    if (images.length === 0 && !product) {
       Alert.alert("Error", "Please add at least one image.");
       return;
     }
 
-    if (!location) {
+    if (!location && !product) {
       Alert.alert("Error", "Location is required. Please enable location services.");
       return;
     }
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("price", price);
-      formData.append("category", category);
-      formData.append("quantity", quantity);
-      formData.append("address", address || "");
-      
-      formData.append(
-        "coordinates",
-        JSON.stringify([location.coords.longitude, location.coords.latitude])
-      );
-
-      images.forEach((uri, index) => {
-        const fileName = uri.split("/").pop();
-        const fileType = fileName?.split(".").pop();
-        
-        // @ts-ignore
-        formData.append("images", {
-          uri,
-          name: fileName || `image_${index}.jpg`,
-          type: `image/${fileType === "jpg" ? "jpeg" : fileType || "jpeg"}`,
+      if (product) {
+        await updateProduct.mutateAsync({
+          id: product._id,
+          data: {
+            name,
+            description,
+            price: Number(price),
+            category,
+            quantity: Number(quantity),
+            address: product.address,
+            coordinates: JSON.stringify(product.location.coordinates),
+          },
         });
-      });
+        Alert.alert("Success", "Product updated successfully!");
+      } else {
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("description", description);
+        formData.append("price", price);
+        formData.append("category", category);
+        formData.append("quantity", quantity);
+        formData.append("address", address || "");
+        
+        formData.append(
+          "coordinates",
+          JSON.stringify([location!.coords.longitude, location!.coords.latitude])
+        );
 
-      await saveProduct.mutateAsync(formData);
-      Alert.alert("Success", "Product listed successfully!");
+        images.forEach((uri, index) => {
+          const fileName = uri.split("/").pop();
+          const fileType = fileName?.split(".").pop();
+          
+          // @ts-ignore
+          formData.append("images", {
+            uri,
+            name: fileName || `image_${index}.jpg`,
+            type: `image/${fileType === "jpg" ? "jpeg" : fileType || "jpeg"}`,
+          });
+        });
+
+        await saveProduct.mutateAsync(formData);
+        Alert.alert("Success", "Product listed successfully!");
+      }
       handleClose();
     } catch (error: any) {
       console.error("Save product error:", error);
-      Alert.alert("Error", "Failed to save product. Please try again.");
+      Alert.alert("Error", `Failed to ${product ? 'update' : 'save'} product. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -135,30 +171,33 @@ export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
           style={styles.modalContent}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>List New Item</Text>
+            <Text style={styles.title}>{product ? 'Edit Item' : 'Add New Item'}</Text>
             <TouchableOpacity onPress={handleClose}>
               <Ionicons name="close" size={28} color="#333" />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.formScroll}>
-            <Text style={styles.label}>Product Images (Max 3)*</Text>
+            <Text style={styles.label}>Product Images {product ? '' : '(Max 3)*'}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
               {images.map((uri, index) => (
                 <View key={index} style={styles.imageContainer}>
                   <Image source={{ uri }} style={styles.imagePlaceholder} />
-                  <TouchableOpacity style={styles.removeIcon} onPress={() => removeImage(index)}>
-                    <Ionicons name="close-circle" size={24} color="#dc3545" />
-                  </TouchableOpacity>
+                  {!product && (
+                    <TouchableOpacity style={styles.removeIcon} onPress={() => removeImage(index)}>
+                      <Ionicons name="close-circle" size={24} color="#dc3545" />
+                    </TouchableOpacity>
+                  )}
                 </View>
               ))}
-              {images.length < 3 && (
+              {!product && images.length < 3 && (
                 <TouchableOpacity style={styles.pickImageButton} onPress={pickImage}>
                   <Ionicons name="camera" size={40} color="#28a745" />
                   <Text style={styles.pickImageText}>Add Photo</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
+            {product && <Text style={styles.helperText}>Image editing is not allowed.</Text>}
 
             <Text style={styles.label}>Product Name*</Text>
             <TextInput
@@ -212,10 +251,12 @@ export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
             <View style={styles.locationContainer}>
               <Ionicons name="location" size={20} color="#28a745" />
               <Text style={styles.locationText} numberOfLines={2}>
-                {address || "Locating..."}
+                {product ? product.address : (address || "Locating...")}
               </Text>
             </View>
-            <Text style={styles.helperText}>Your current location will be used.</Text>
+            <Text style={styles.helperText}>
+              {product ? "Location editing is not supported." : "Your current location will be used."}
+            </Text>
 
             <TouchableOpacity
               style={[styles.submitButton, loading && styles.disabledButton]}
@@ -225,7 +266,7 @@ export const AddProductModal = ({ visible, onClose }: AddProductModalProps) => {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.submitButtonText}>Add Item</Text>
+                <Text style={styles.submitButtonText}>{product ? 'Update Item' : 'Add Item'}</Text>
               )}
             </TouchableOpacity>
           </ScrollView>

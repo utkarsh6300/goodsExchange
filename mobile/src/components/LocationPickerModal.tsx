@@ -16,8 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, Region } from "react-native-maps";
 import { useLocationContext } from "../contexts/LocationContext";
 import * as Location from "expo-location";
-// @ts-ignore
-import { YOUR_GOOGLE_MAPS_API_KEY } from "@env";
+import Constants from "expo-constants";
 
 interface LocationPickerModalProps {
   visible: boolean;
@@ -44,6 +43,8 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
   const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const mapRef = useRef<MapView>(null);
+
+  const YOUR_GOOGLE_MAPS_API_KEY = Constants.expoConfig?.extra?.YOUR_GOOGLE_MAPS_API_KEY;
 
   // Initialize marker from current location
   useEffect(() => {
@@ -78,7 +79,7 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
     setIsSearching(true);
     try {
       const apiKey = YOUR_GOOGLE_MAPS_API_KEY;
-      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
+      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY_HERE" || !apiKey) {
         console.warn("[LocationPickerModal] No Google Maps API Key found. Autocomplete disabled.");
         setIsSearching(false);
         return;
