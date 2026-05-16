@@ -7,6 +7,7 @@ import { AddProductModal } from "../../src/components/AddProductModal";
 import { useState } from "react";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { useRouter } from "expo-router";
+import { Logo } from "../../src/components/Logo";
 
 export default function TabLayout() {
   const { address } = useLocationContext();
@@ -31,13 +32,16 @@ export default function TabLayout() {
         screenOptions={{ 
           tabBarActiveTintColor: "#28a745",
           headerLeft: () => (
-            <TouchableOpacity style={styles.headerLocation} onPress={() => setLocModalVisible(true)}>
-              <Ionicons name="location" size={18} color="#28a745" />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {address || "Locating..."}
-              </Text>
-              <Ionicons name="chevron-down" size={14} color="#666" />
-            </TouchableOpacity>
+            <View style={styles.headerLeft}>
+              <Logo size={32} style={styles.headerLogo} />
+              <TouchableOpacity style={styles.headerLocation} onPress={() => setLocModalVisible(true)}>
+                <Ionicons name="location" size={18} color="#28a745" />
+                <Text style={styles.locationText} numberOfLines={1}>
+                  {address || "Locating..."}
+                </Text>
+                <Ionicons name="chevron-down" size={14} color="#666" />
+              </TouchableOpacity>
+            </View>
           ),
           headerTitle: "", 
         }}
@@ -86,6 +90,14 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 15,
+  },
+  headerLogo: {
+    marginRight: -5,
+  },
   headerLocation: {
     flexDirection: "row",
     alignItems: "center",

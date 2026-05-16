@@ -4,7 +4,13 @@
     "slug": "goods-exchange-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -12,6 +18,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.goodsexchangemobile",
       "newArchEnabled": true,
+      "icon": "./assets/images/icon.png",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Allow Goods Exchange to use your location to show products and local deals nearby."
       }
@@ -19,6 +26,10 @@
     "android": {
       "package": "com.anonymous.goodsexchangemobile",
       "newArchEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
