@@ -1,10 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../services/api";
 import { IMessage } from "react-native-gifted-chat";
+import { useMe } from "./useMe";
 
 const fetchMessages = async (conversationId: string): Promise<IMessage[]> => {
   const response = await api.get(`/chat/conversations/${conversationId}/messages`);
-  // Transform backend messages to GiftedChat format if needed
+  // Transform backend messages to GiftedChat format
+  // Backend returns them in chronological order (oldest first), 
+  // GiftedChat expects reverse chronological (newest first) for its default list.
   return response.data.map((msg: any) => ({
     _id: msg._id,
     text: msg.text,
@@ -13,24 +16,12 @@ const fetchMessages = async (conversationId: string): Promise<IMessage[]> => {
       _id: msg.sender._id,
       name: msg.sender.name || msg.sender.username,
     },
-  }));
-};
-
-const sendMessage = async ({
-  conversationId,
-  receiverId,
-  text,
-}: {
-  conversationId: string;
-  receiverId: string;
-  text: string;
-}) => {
-  const response = await api.post(`/chat/messages`, { conversationId, receiverId, text });
-  return response.data;
+  })).reverse();
 };
 
 export const useChat = (conversationId: string) => {
   const queryClient = useQueryClient();
+  const { data: me } = useMe();
 
   const messagesQuery = useQuery({
     queryKey: ["messages", conversationId],
@@ -38,47 +29,29 @@ export const useChat = (conversationId: string) => {
     enabled: !!conversationId,
   });
 
-  const sendMutation = useMutation({
-    mutationFn: sendMessage,
-    onMutate: async (variables) => {
-      // Cancel refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: ["messages", conversationId] });
+  const addOptimisticMessage = (text: string) => {
+    if (!me) return;
 
-      // Snapshot previous value
-      const previousMessages = queryClient.getQueryData<IMessage[]>(["messages", conversationId]);
+    const newMessage: IMessage = {
+      _id: `temp-${Math.random().toString(36).substr(2, 9)}`,
+      text: text,
+      createdAt: new Date(),
+      user: {
+        _id: me._id,
+        name: me.name || me.username,
+      },
+    };
 
-      // Optimistically update to the new value
-      const newMessage: IMessage = {
-        _id: Math.random().toString(),
-        text: variables.text,
-        createdAt: new Date(),
-        user: { _id: 1, name: "Me" }, // Use actual user info in reality
-      };
+    queryClient.setQueryData<IMessage[]>(["messages", conversationId], (old) => 
+      old ? [newMessage, ...old] : [newMessage]
+    );
 
-      if (previousMessages) {
-        queryClient.setQueryData<IMessage[]>(["messages", conversationId], [
-          newMessage,
-          ...previousMessages,
-        ]);
-      }
-
-      return { previousMessages };
-    },
-    onError: (err, newMessage, context) => {
-      // Rollback on error
-      if (context?.previousMessages) {
-        queryClient.setQueryData(["messages", conversationId], context.previousMessages);
-      }
-    },
-    onSettled: () => {
-      // Refetch after error or success
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-    },
-  });
+    return newMessage;
+  };
 
   return {
     messages: messagesQuery.data ?? [],
     isLoading: messagesQuery.isLoading,
-    sendMessage: sendMutation.mutate,
+    addOptimisticMessage,
   };
 };

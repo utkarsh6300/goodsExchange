@@ -4,6 +4,7 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../../src/services/api";
+import { Logo } from "../../src/components/Logo";
 
 export default function SignupScreen() {
   const [username, setUsername] = useState("");
@@ -58,7 +59,10 @@ export default function SignupScreen() {
             <Ionicons name="close" size={28} color="#333" />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Join Goods Exchange</Text>
+          <View style={styles.header}>
+            <Logo size={80} style={styles.logo} />
+            <Text style={styles.title}>Join Goods Exchange</Text>
+          </View>
           
           <TextInput
             style={styles.input}
@@ -126,6 +130,14 @@ const styles = StyleSheet.create({
     justifyContent: "center", 
     backgroundColor: "#fff",
     position: "relative"
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 20,
+    marginTop: 60,
+  },
+  logo: {
+    marginBottom: 10,
   },
   closeButton: {
     position: "absolute",

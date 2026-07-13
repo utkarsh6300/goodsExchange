@@ -11,6 +11,7 @@ import {
   Platform,
   FlatList,
   Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, Region } from "react-native-maps";
@@ -23,26 +24,15 @@ interface LocationPickerModalProps {
   onClose: () => void;
 }
 
-// Simple local debounce function
-function debounce(func: Function, wait: number) {
-  let timeout: any;
-  return function executedFunction(...args: any[]) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const { location, address, refreshLocation, isLoading, manualSetCoords } = useLocationContext();
   const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
   const mapRef = useRef<MapView>(null);
+  const searchTimeout = useRef<any>(null);
 
   const YOUR_GOOGLE_MAPS_API_KEY = Constants.expoConfig?.extra?.YOUR_GOOGLE_MAPS_API_KEY;
 
@@ -54,20 +44,24 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
         longitude: location.coords.longitude,
       };
       setSelectedCoords(coords);
-      if (address) {
+      if (address && searchQuery === "") {
         setSearchQuery(address);
       }
 
-      // Initial animation to current location
-      setTimeout(() => {
-        mapRef.current?.animateToRegion({
-          ...coords,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }, 1000);
-      }, 500);
+      if (isMapReady) {
+        animateTo(coords.latitude, coords.longitude);
+      }
     }
-  }, [visible, location, address]);
+  }, [visible, location, address, isMapReady]);
+
+  const animateTo = (lat: number, lng: number) => {
+    mapRef.current?.animateToRegion({
+      latitude: lat,
+      longitude: lng,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }, 1000);
+  };
 
   // Handle autocomplete using Google Places API
   const fetchAutocomplete = async (query: string) => {
@@ -79,8 +73,8 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
     setIsSearching(true);
     try {
       const apiKey = YOUR_GOOGLE_MAPS_API_KEY;
-      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY_HERE" || !apiKey) {
-        console.warn("[LocationPickerModal] No Google Maps API Key found. Autocomplete disabled.");
+      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
+        console.warn("[LocationPickerModal] No valid Google Maps API Key found.");
         setIsSearching(false);
         return;
       }
@@ -104,19 +98,28 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
     }
   };
 
-  const debouncedFetch = useCallback(
-    debounce((query: string) => fetchAutocomplete(query), 500),
-    []
-  );
-
   const handleSearchChange = (text: string) => {
     setSearchQuery(text);
-    debouncedFetch(text);
+    
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    if (text.length >= 3) {
+      searchTimeout.current = setTimeout(() => {
+        fetchAutocomplete(text);
+      }, 500);
+    } else {
+      setSearchResults([]);
+    }
   };
 
   const handleSelectResult = async (item: any) => {
     Keyboard.dismiss();
+    setSearchResults([]);
+    setSearchQuery(item.description);
     setIsSearching(true);
+
     try {
       const apiKey = YOUR_GOOGLE_MAPS_API_KEY;
       const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${item.place_id}&key=${apiKey}&fields=geometry`;
@@ -129,14 +132,7 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
         const coords = { latitude: lat, longitude: lng };
 
         setSelectedCoords(coords);
-        mapRef.current?.animateToRegion({
-          ...coords,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }, 1000);
-
-        setSearchQuery(item.description);
-        setSearchResults([]);
+        animateTo(lat, lng);
       }
     } catch (error) {
       console.error("[LocationPickerModal] Place Details error:", error);
@@ -146,20 +142,28 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
   };
 
   const handleUseCurrentLocation = async () => {
-    console.log("[LocationPickerModal] Using current location...");
+    Keyboard.dismiss();
+    setIsSearching(true);
     await refreshLocation();
-    onClose();
+    setIsSearching(false);
+    // Modal will close via useEffect if needed, but here we want to let user see it
   };
 
   const handleMapPress = async (e: any) => {
+    Keyboard.dismiss();
     const coords = e.nativeEvent.coordinate;
     setSelectedCoords(coords);
+    updateAddressFromCoords(coords);
+  };
 
+  const updateAddressFromCoords = async (coords: { latitude: number; longitude: number }) => {
     try {
       const response = await Location.reverseGeocodeAsync(coords);
       if (response.length > 0) {
         const item = response[0];
-        const addressStr = `${item.name || ""} ${item.city || ""} ${item.region || ""}`.trim();
+        const addressStr = [item.name, item.city, item.region]
+          .filter(Boolean)
+          .join(" ");
         setSearchQuery(addressStr || `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
       }
     } catch (err) {
@@ -176,107 +180,116 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
-      <View style={styles.modalOverlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalContent}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-        >
-          <View style={styles.header}>
-            <Text style={styles.title}>Select Location</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.searchWrapper}>
-            <View style={styles.searchContainer}>
-              <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Search city or address..."
-                value={searchQuery}
-                onChangeText={handleSearchChange}
-                autoFocus={true}
-                clearButtonMode="while-editing"
-              />
-              {searchQuery.length > 0 && Platform.OS === 'android' && (
-                <TouchableOpacity onPress={() => setSearchQuery("")}>
-                  <Ionicons name="close-circle" size={20} color="#ccc" />
-                </TouchableOpacity>
-              )}
-              {isSearching && <ActivityIndicator size="small" color="#28a745" style={styles.searchingLoader} />}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalContent}
+          >
+            <View style={styles.header}>
+              <Text style={styles.title}>Select Location</Text>
+              <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
             </View>
 
-            {searchResults.length > 0 && (
-              <View style={styles.resultsContainer}>
-                <FlatList
-                  data={searchResults}
-                  keyExtractor={(item) => item.place_id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.resultItem}
-                      onPress={() => handleSelectResult(item)}
-                    >
-                      <Ionicons name="location-outline" size={18} color="#666" />
-                      <Text style={styles.resultText} numberOfLines={1}>{item.description}</Text>
-                    </TouchableOpacity>
-                  )}
-                  style={styles.resultsList}
-                  keyboardShouldPersistTaps="handled"
+            <View style={styles.searchContainer}>
+              <View style={styles.searchBar}>
+                <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Search city or address..."
+                  value={searchQuery}
+                  onChangeText={handleSearchChange}
+                  clearButtonMode="while-editing"
+                  placeholderTextColor="#999"
                 />
+                {isSearching && <ActivityIndicator size="small" color="#28a745" style={styles.loader} />}
               </View>
-            )}
-          </View>
 
-          <View style={styles.mapContainer}>
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              onPress={handleMapPress}
-              showsUserLocation={true}
-              showsMyLocationButton={false}
-            >
-              {selectedCoords && (
-                <Marker
-                  coordinate={selectedCoords}
-                  draggable
-                  onDragEnd={(e) => handleMapPress(e)}
-                  pinColor="#28a745"
-                />
+              {searchResults.length > 0 && (
+                <View style={styles.resultsWrapper}>
+                  <FlatList
+                    data={searchResults}
+                    keyExtractor={(item) => item.place_id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.resultItem}
+                        onPress={() => handleSelectResult(item)}
+                      >
+                        <Ionicons name="location-outline" size={18} color="#666" />
+                        <Text style={styles.resultText} numberOfLines={1}>{item.description}</Text>
+                      </TouchableOpacity>
+                    )}
+                    keyboardShouldPersistTaps="handled"
+                    scrollEnabled={true}
+                    nestedScrollEnabled={true}
+                  />
+                </View>
               )}
-            </MapView>
+            </View>
 
-            {/* Overlay if loading */}
-            {!selectedCoords && (
-              <View style={styles.mapPlaceholder}>
-                <ActivityIndicator size="large" color="#28a745" />
-                <Text style={{ marginTop: 10, color: '#666' }}>Loading map...</Text>
-              </View>
-            )}
-          </View>
+            <View style={styles.mapWrapper}>
+              <MapView
+                ref={mapRef}
+                style={styles.map}
+                onPress={handleMapPress}
+                onMapReady={() => setIsMapReady(true)}
+                showsUserLocation={true}
+                showsMyLocationButton={false}
+                initialRegion={location?.coords ? {
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                } : undefined}
+              >
+                {selectedCoords && (
+                  <Marker
+                    coordinate={selectedCoords}
+                    draggable
+                    onDragEnd={(e) => {
+                      const newCoords = e.nativeEvent.coordinate;
+                      setSelectedCoords(newCoords);
+                      updateAddressFromCoords(newCoords);
+                    }}
+                    pinColor="#28a745"
+                  />
+                )}
+              </MapView>
 
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={styles.currentLocationButton}
-              onPress={handleUseCurrentLocation}
-              disabled={isLoading}
-            >
-              <Ionicons name="locate" size={22} color="#28a745" />
-              <Text style={styles.currentLocationText}>Use My Current Location</Text>
-              {isLoading && <ActivityIndicator size="small" color="#28a745" style={{ marginLeft: 10 }} />}
-            </TouchableOpacity>
+              {!isMapReady && (
+                <View style={styles.mapLoading}>
+                  <ActivityIndicator size="large" color="#28a745" />
+                </View>
+              )}
+            </View>
 
-            <TouchableOpacity
-              style={[styles.applyButton, !selectedCoords && styles.disabledButton]}
-              onPress={handleApplyLocation}
-              disabled={isLoading || !selectedCoords}
-            >
-              <Text style={styles.applyButtonText}>Confirm & Set Location</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={styles.currentLocationBtn}
+                onPress={handleUseCurrentLocation}
+                disabled={isLoading}
+              >
+                <Ionicons name="locate" size={22} color="#28a745" />
+                <Text style={styles.currentLocationText}>Use My Current Location</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.applyBtn, !selectedCoords && styles.disabledBtn]}
+                onPress={handleApplyLocation}
+                disabled={!selectedCoords || isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.applyBtnText}>Confirm Location</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -284,58 +297,55 @@ export const LocationPickerModal = ({ visible, onClose }: LocationPickerModalPro
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: "#fff",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 20,
-    height: "92%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 20,
+    height: "90%",
+    width: "100%",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
   title: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#333",
   },
-  searchWrapper: {
-    zIndex: 100,
-    marginBottom: 10,
-  },
   searchContainer: {
+    zIndex: 1000,
+    marginBottom: 15,
+    position: "relative",
+  },
+  searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f7f9",
+    backgroundColor: "#f0f2f5",
     borderRadius: 12,
     paddingHorizontal: 12,
+    height: 50,
     borderWidth: 1,
-    borderColor: "#eef2f6",
+    borderColor: "#e0e4e8",
   },
   searchIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    height: 50,
     fontSize: 16,
     color: "#333",
   },
-  searchingLoader: {
+  loader: {
     marginLeft: 10,
   },
-  resultsContainer: {
+  resultsWrapper: {
     position: "absolute",
     top: 55,
     left: 0,
@@ -345,21 +355,20 @@ const styles = StyleSheet.create({
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-    maxHeight: 250,
+    maxHeight: 200,
+    zIndex: 1001,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: "#eee",
-  },
-  resultsList: {
-    padding: 5,
   },
   resultItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#f5f5f5",
+    borderBottomColor: "#f0f0f0",
   },
   resultText: {
     marginLeft: 12,
@@ -367,61 +376,59 @@ const styles = StyleSheet.create({
     color: "#444",
     flex: 1,
   },
-  mapContainer: {
+  mapWrapper: {
     flex: 1,
     borderRadius: 20,
     overflow: "hidden",
-    marginBottom: 15,
-    backgroundColor: '#f8f9fa',
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
   },
   map: {
-    width: "100%",
-    height: "100%",
-  },
-  mapPlaceholder: {
     ...StyleSheet.absoluteFillObject,
+  },
+  mapLoading: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#f8f9fa",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(248, 249, 250, 0.8)",
-    zIndex: 10,
   },
   footer: {
-    marginTop: "auto",
+    gap: 12,
+    paddingBottom: Platform.OS === "ios" ? 20 : 0,
   },
-  currentLocationButton: {
+  currentLocationBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 15,
-    justifyContent: 'center',
-    marginBottom: 10,
+    justifyContent: "center",
+    paddingVertical: 12,
   },
   currentLocationText: {
-    marginLeft: 10,
+    marginLeft: 8,
     fontSize: 16,
     color: "#28a745",
     fontWeight: "600",
   },
-  applyButton: {
+  applyBtn: {
     backgroundColor: "#28a745",
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 15,
     alignItems: "center",
     shadowColor: "#28a745",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    shadowRadius: 5,
+    elevation: 6,
   },
-  applyButtonText: {
+  applyBtnText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
   },
-  disabledButton: {
-    backgroundColor: "#c2e5cb",
+  disabledBtn: {
+    backgroundColor: "#ccc",
     shadowOpacity: 0,
     elevation: 0,
   },
 });
+

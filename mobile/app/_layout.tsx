@@ -1,11 +1,13 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { LocationProvider } from "../src/contexts/LocationContext";
+import { SocketProvider } from "../src/contexts/SocketContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,11 +72,15 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LocationProvider>
-          <RootLayoutNav />
-        </LocationProvider>
-      </AuthProvider>
+      <KeyboardProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <LocationProvider>
+              <RootLayoutNav />
+            </LocationProvider>
+          </SocketProvider>
+        </AuthProvider>
+      </KeyboardProvider>
     </QueryClientProvider>
   );
 }
